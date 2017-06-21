@@ -205,6 +205,7 @@
           {% endif %}
 
           {% if theme.post_wordcount.wordcount or theme.post_wordcount.min2read %}
+            <br>
             <div class="post-wordcount">
               {% if theme.post_wordcount.wordcount %}
                 {% if not theme.post_wordcount.separated_meta %}

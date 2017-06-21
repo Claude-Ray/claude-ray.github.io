@@ -2,6 +2,7 @@
 title: Hexo搭建过程
 date: 2017-06-18 22:09:28
 tags: Hexo
+categories: Hexo
 description: 使用Hexo打造个人GitHub Pages的简要过程
 ---
 
