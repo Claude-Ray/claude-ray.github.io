@@ -214,10 +214,11 @@ sidebar:
 
 
 # Blog rolls
-#links_title: Links
+links_title: Links
 #links_layout: block
-#links_layout: inline
-#links:
+links_layout: inline
+links:
+  Nebulae Pan: https://github.com/nebulae-pan
   #Title: http://example.com/
 
 
@@ -263,7 +264,7 @@ post_wordcount:
 
 # Declare license on posts
 post_copyright:
-  enable: false
+  enable: true
   license: CC BY-NC-SA 3.0
   license_url: https://creativecommons.org/licenses/by-nc-sa/3.0/
 
