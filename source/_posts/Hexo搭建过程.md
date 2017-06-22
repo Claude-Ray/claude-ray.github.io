@@ -90,6 +90,9 @@ menu:
 # in site  directory(source/uploads): /uploads/avatar.jpg
 avatar: /images/avatar.jpg
 ```
+#### 进阶设定
+官方文档介绍的很详细，请首先查阅[Next使用文档](http://theme-next.iissnan.com/getting-started.html)
+
 ### 遇到的坑和问题汇总
 
 #### 404页面配置
