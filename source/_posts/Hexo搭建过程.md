@@ -90,6 +90,32 @@ menu:
 # in site  directory(source/uploads): /uploads/avatar.jpg
 avatar: /images/avatar.jpg
 ```
+#### 阅读统计
+为文章增加字数统计和阅读时长字段，需要安装wordcount
+```
+npm i hexo-wordcount --save
+```
+最新的2017 next主题已经内置了``hexo-wordcount``，接下来就可以在主题配置文件``_config.yml``中，修改如下配置
+```
+# Post wordcount display settings
+# Dependencies: https://github.com/willin/hexo-wordcount
+post_wordcount:
+  item_text: true
+  wordcount: true
+  min2read: true
+  separated_meta: true
+```
+关于单篇博客阅读人数的统计，我使用了``LeanCloud``，而非``不蒜子``，同样都在next主题中内置。主要原因是``不蒜子``不能在首页显示阅读统计，此外``LeanCloud``还提供了一定的管理功能。需要在主题配置文件中修改如下字段
+
+```
+# Show number of visitors to each article.
+# You can visit https://leancloud.cn get AppID and AppKey.
+leancloud_visitors:
+  enable: true
+  app_id: 
+  app_key: 
+```
+
 #### 进阶设定
 官方文档介绍的很详细，请首先查阅[Next使用文档](http://theme-next.iissnan.com/getting-started.html)
 
