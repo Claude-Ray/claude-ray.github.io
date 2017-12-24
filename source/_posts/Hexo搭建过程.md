@@ -14,7 +14,7 @@ description: 使用Hexo打造个人GitHub Pages的简要过程
 #### 安装 Hexo
 通过 Node 的 npm 安装 Hexo，命令行输入
 ```bash 
-$ npm install -g hexo-cli 
+$ sudo npm i -g hexo-cli 
 ```
 
 #### Hexo 初始化
