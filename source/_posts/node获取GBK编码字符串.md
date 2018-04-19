@@ -23,3 +23,17 @@ function toGBKString(str) {
 }
 ```
 以上是不加百分号的，如果需要可以在模板字符串中自行加上。
+
+## 2018-04-18更
+
+由于`Buffer`本身支持hex的转换
+
+> Buffer instances are commonly used to represent sequences of encoded characters such as UTF-8, UCS2, Base64, or even Hex-encoded data. It is possible to convert back and forth between Buffer instances and ordinary JavaScript strings by using an explicit character encoding.
+
+> 'hex' - Encode each byte as two hexadecimal characters.
+
+因此`reduce`可以继续简化为
+
+```js
+iconv.encode(str, 'gbk').toString('hex');
+```
