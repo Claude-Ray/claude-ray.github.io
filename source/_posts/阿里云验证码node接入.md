@@ -52,3 +52,7 @@ GET和POST都支持，只需留意签名计算的区别。
 除了验证地址，不同Version下需要提交的必选参数也不同，详情需要去其他版本SDK挖掘。
 
 看得出文档内容比前人吐槽的时候丰富了不少，望相关开发人员及时更新。
+
+### SDK实现
+
+[aliyun-captcha](https://github.com/Claude-Ray/aliyun-captcha)
