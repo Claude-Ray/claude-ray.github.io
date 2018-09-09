@@ -25,7 +25,7 @@ const ctx = canvas.getContext('2d');
 
 ### 2. 透明度
 ```js
-ctx.gloablAlpha = opts.opacity;
+ctx.globalAlpha = opts.opacity;
 ```
 
 ### 3. 背景色填充
@@ -100,7 +100,7 @@ ctx.fillRect(0, 0, opts.width, opts.height);
 ```
 
 ### 空心字体
-canvas原生支持的几个字体差别实在不大，有个技巧是绘制空心字体，在验证码被攻击时，可以加入支持应急，在没有准备的情况下，可以立刻起到拦截效果。
+canvas原生支持的几个字体差别实在不大，有个技巧是绘制空心字体，在验证码被攻击时，可以加入支持应急，在攻击者没有准备的情况下，可以立刻起到拦截效果。
 
 用法很简单，将上面写字用到的`fillStyle`替换为`strokeStyle`，`fillText`替换为`strokeText`。
 
