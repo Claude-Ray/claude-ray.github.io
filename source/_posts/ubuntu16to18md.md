@@ -42,7 +42,11 @@ sudo dpkg --configure -a
 但是打开浏览器发现无法上网，但系统提示网线已连接，第一反应是dns，修改了`/etc/resolv.conf`没效果，又习惯性用ssh测远程连接，再次失败陷入误区。当发现使用ip和端口可以访问服务时才彻底意识到是dns的问题。
 
 ### - 修改dns
-ubuntu修改dns两种方式，并不包含直接修改`/etc/resolv.conf`。
+
+一般情况，使用DHCP就可以动态处理网络问题。当有修改必要时，需要注意新旧版本Ubuntu修改方式存在差异。
+
+#### 16.04以下：
+旧版本的ubuntu修改dns有两种方式，并不包含直接修改`/etc/resolv.conf`。
 
 编辑`/etc/resolvconf/resolv.conf.d/base`，文件初始内容为空，加上`nameserver 8.8.8.8`，之后需执行
 ```
@@ -51,6 +55,11 @@ resolvconf -u
 才会正确生效并写入`/etc/resolv.conf`。
 
 另一种方式是直接修改`/etc/network/interfaces`。
+
+#### 18.04：
+以上方法均不适用，因为Ubuntu18采用了`Netplan`，查看DNS配置应使用`systemd-resolve --status`，
+
+可以停用`systemd-resolved`服务但不推荐，目前修改教程较少，之后会越来越多。（[参考链接](https://www.itzgeek.com/how-tos/linux/ubuntu-how-tos/netplan-how-to-configure-static-ip-address-in-ubuntu-18-04-using-netplan.html)）
 
 ### - 修复ssh
 升级之后使用ssh提示`permission denied (publickey)`，最快排查办法是带上参数`-vvv`，我这里的错误是未指定私钥文件，使用`-i`加私钥路径可解。
