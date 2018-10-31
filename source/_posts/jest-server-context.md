@@ -1,7 +1,7 @@
 ---
 title: Jest共享server和tests的上下文环境
 date: 2018-10-30 22:05:19
-tags: Jest Test
+tags: [Node.js,Jest,Unit Testing]
 categories: Node.js
 description: 本文首先简单介绍Jest关于启动的配置项，阐述Jest测试生命周期，之后粗略总结不同情况的server应该何时启动，最终使用略粗鄙的办法解决本次问题。
 ---

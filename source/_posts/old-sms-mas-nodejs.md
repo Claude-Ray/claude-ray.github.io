@@ -1,7 +1,7 @@
 ---
 title: Nodejs使用MySQL 4.1的问题解决
 date: 2018-10-12 22:04:17
-tag: MySQL
+tag: [Node.js,MySQL]
 categories: Node.js
 description: 近期有同学在玩一台老古董服务器，要使用node连上4.1版本的MySQL进行操作。并且不让改动数据库配置，凭啥？人家是移动提供的MAS……本文分享一下帮忙时填的坑，主要为解决“数据库连接”和“编码转换”问题。
 ---

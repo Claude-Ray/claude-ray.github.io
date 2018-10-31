@@ -1,7 +1,7 @@
 ---
 title: Node获取GBK编码字符串
 date: 2017-10-05 08:50:46
-tags: String
+tags: [Node.js,String]
 categories: Node.js
 description: Node下如何获取GBK编码的字符串
 ---

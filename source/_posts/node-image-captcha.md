@@ -1,7 +1,7 @@
 ---
 title: node图形验证码实现
 date: 2018-09-02 21:46:55
-tags: JavaScript
+tags: [JavaScript,Captcha,Canvas]
 categories: Node.js
 description: JS的图形验证码已有很多开源实现，可以直接用npm引入，但如果综合考虑性能和契合度时，还是亲自动手造一个好。当然实现起来并不复杂，且方便结合自身需求调整，在此分享一下使用node-canvas绘制验证码的几个心得。
 ---

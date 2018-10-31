@@ -1,7 +1,7 @@
 ---
 title: request中文乱码问题
 date: 2018-02-26 22:16:20
-tags:
+tags: Node.js
 categories: Node.js
 description: Node中使用request请求得到的数据为乱码，分析可能的情况并列举解决方案。
 ---

@@ -1,7 +1,7 @@
 ---
 title: 使用chokidar监视文件更新
 date: 2018-01-27 12:57:42
-tags: 
+tags: [Node.js]
 categories: Node.js
 description: 为了提高文件读取效率，有时会将文件内容缓存到内存再使用。但是当文件发生更改，如何将改动更新到缓存而又不重启Node进程。
 ---

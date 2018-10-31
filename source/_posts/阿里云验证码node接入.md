@@ -1,7 +1,7 @@
 ---
 title: 阿里云验证码node接入
 date: 2018-07-31 22:51:14
-tags: Captcha
+tags: [Node.js,Captcha]
 categories: Node.js
 description: 分享接入过程和心得
 ---

@@ -1,7 +1,7 @@
 ---
 title: koa之Content-Type与Content-Length
 date: 2018-10-18 22:16:05
-tags: JavaScript
+tags: [Node.js,JavaScript,Koa]
 categories: Node.js
 description: 透过ctx.body setter的执行过程，分析koa如何设置响应头content-type和content-length，以及一些注意事项。
 ---
