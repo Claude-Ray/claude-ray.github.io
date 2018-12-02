@@ -19,13 +19,24 @@ sudo apt install shadowsocks-libev
 ### 配置代理服地址
 参考config.json修改local.json，填写代理服务器的地址。
 ```sh
-cp /etc/shadowsocks-libev/config.json /etc/shadowsocks-libev/local.json
-vi /etc/shadowsocks-libev/local.json
+sudo cp /etc/shadowsocks-libev/config.json /etc/shadowsocks-libev/local.json
+sudo vi /etc/shadowsocks-libev/local.json
+```
+建议`local_port`不要使用默认的1080，例如改为1081。主要是避免和ss-server（在安装后默认作为`shadowsocks-libev.service`启动）抢占端口，或者选择手动停掉ss-server。
+```json
+{
+  "server": "代理服地址",
+  "server_port": "代理服端口",
+  "local_port": 1081,
+  "password": "代理服密码",
+  "timeout": 60,
+  "method": "chacha20-ietf-poly1305"
+}
 ```
 
 ### 配置systemd service
 ```sh
-vi /lib/systemd/system/shadowsocks-libev-local@.service
+sudo vi /lib/systemd/system/shadowsocks-libev-local@.service
 ```
 替换其中ExecStart的配置路径
 ```
@@ -36,11 +47,12 @@ ExecStart=/usr/bin/ss-local -c /etc/shadowsocks-libev/local.json
 使用systemctl或service管理服务
 ```sh
 #启动
-systemctl start shadowsocks-libev-local@.service
+sudo systemctl start shadowsocks-libev-local@.
+#或 $ sudo service shadowsocks-libev-local@.service start
 #查看运行情况
-systemctl status shadowsocks-libev-local@.service
+sudo systemctl status shadowsocks-libev-local@.
 #配置开机自启
-systemctl enable shadowsocks-libev-local@.service
+sudo systemctl enable shadowsocks-libev-local@.
 ```
 
 ## 四、配置PAC文件
@@ -50,7 +62,7 @@ PAC的语法是js，规则非常简单。核心点是实现`FindProxyForURL`函�
 
 ```js
 // 端口号按之前配置local.json的local_port来填写，默认1080
-var proxy = 'SOCKS5 127.0.0.1:1080';
+var proxy = 'SOCKS5 127.0.0.1:1081';
 
 // 走代理的host
 var hosts = [
