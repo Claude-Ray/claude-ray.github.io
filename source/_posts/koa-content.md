@@ -91,6 +91,8 @@ set body(val) {
 
 > ctx.type的设置支持各类缩略词，每次set前都会通过`mime-types`和`mime-db`依赖匹配完整名称，并挂上charset。
 
+> 除了设置，还需要注意的点是ctx.type的getter会过滤掉`charset`部分，因此**ctx.type的setter和getter不是完全对等的**。如果想获取之前设置过的完整信息，需要通过`ctx.res.getHeader('Content-Type')`到头部获取。
+
 Wait，好像还漏了什么？
 
 content-type既然在最后给定为json，为什么执行了一个`this.remove('Content-Length')`？且听下面分解。

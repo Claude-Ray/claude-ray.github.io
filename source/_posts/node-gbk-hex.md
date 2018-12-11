@@ -1,9 +1,9 @@
 ---
-title: Node获取GBK编码字符串
+title: Node获取GBK编码“字符串”
 date: 2017-10-05 08:50:46
 tags: [Node.js,String]
 categories: Node.js
-description: Node下如何获取GBK编码的字符串
+description: 首先，Node内部是无法直接获取GBK编码“字符串”的，只不过使用到GBK的场景均有相应的应对方法。最初学习时，陷入了接口返回值必须是“字符串”的误区，然而想把GBK编码从Buffer强转为GBK中文String类型是做不到的。本篇借助了hex码，达成了字符串形式传输GBK数据的需要，用以发送给其他语言编写的系统。
 ---
 
 # UTF8 to GBK Hex String

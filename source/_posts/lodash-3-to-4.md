@@ -1,9 +1,9 @@
 ---
-title: 9月踩的坑
+title: lodash3升级4踩坑
 date: 2017-10-05 09:15:09
-tags:
+tags: [Lodash,npm]
 categories: Node.js
-description: 记录9月份踩的一些坑，redis缓存和npm包的安装。
+description: 记录lodash升级过程中不兼容的点，以及偶遇的npm包安装异常。
 ---
 
 ## lodash版本问题
@@ -15,12 +15,6 @@ description: 记录9月份踩的一些坑，redis缓存和npm包的安装。
 lodash.merge有一个常用的特性，即._merge(source, [...abc])，merge会自动过滤到后面参数中undefined的属性。然而，`4.17.x` 的 lodash 不再支持。这个是根据论坛其他人的评论和官方的history.md发现的，然而一年过去了，lodash的官方文档却没有更新这一点……
 
 如果仍想用到过滤 `undefined` 的特性，就需要使用 `_.omitBy(myObj, _.isNil)` 或者 `_.pickBy(myObj)` 包装或替换原使用 `_.merge(myObj, [...source])` 的地方。
-
-## 写缓存冲突
-
-有两个项目分别在两台服务器上pm2开5个进程，并且都具备读写一个缓存的操作，发生了写缓存冲突，导致缓存中数据写入不完整。
-
-限制为只有一个项目写即可解决。
 
 ## npm安装失败
 
