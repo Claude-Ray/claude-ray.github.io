@@ -39,13 +39,33 @@ ctx.type = 'text/plain; charset=gbk';
 ```
 
 ## 接口参数
-同样以koa举例，结合koa-bodyparser，原始参数分别在ctx.request.rawBody和ctx.request.querystring中，`urlencode.parse`解析。
+同样以koa举例，结合`koa-bodyparser`，一般http method的原始参数分布在ctx.request.rawBody和ctx.request.querystring中，使用`urlencode.parse`解析。
 ```js
 urlencode.parse(ctx.request.rawBody, {charset: 'gbk'});
 urlencode.parse(ctx.request.querystring, {charset: 'gbk'});
 ```
 
-如果能约定使用十六进制传参更好，处理hex就不需要在参数获取上额外处理了。
+特别地，当请求格式为multipart或json时需要结合具体情况具体分析。
+
+例如，使用`busboy`等multipart解析库会将请求body挂在`ctx.request.body`上，规范的请求方式是会对字符进行url encode的，这时可以按gbk编码对字段decode（由于不能直接url decode，实际处理方法为转hex后再经buffer解码）。
+
+如果请求参数是经过binary处理的，则binary decode。
+
+综上，处理姿势大致如下。
+```js
+lodash.mapValues(ctx.request.body, value => {
+  if (!value) return value;
+
+  const buff = /^(%\w{2})+$/.test(value)
+    ? Buffer.from(value.replace(/%/g, ''), 'hex')
+    : Buffer.from(value, 'binary');
+
+  return iconv.decode(buff, 'gbk');
+});
+```
+想兼容更多情况是比较复杂的，即使做基础服务也不必包容所有不规范的传值，大可以拒绝解析，因此按需调整即可。
+
+如果能约定使用十六进制传参更好，处理hex就不需要在参数获取上额外操作了。可惜一般用到gbk的场景都是难以变更的、需要兼容的，否则肯定是让调用方改传utf8，皆大欢喜。
 
 ## 读写文件
 默认方式（`encoding: null`）就是操作buffer，iconv转换无压力。
