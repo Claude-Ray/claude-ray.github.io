@@ -1,0 +1,76 @@
+---
+title: 当 bind_ip:127.0.0.1 遇上 Debian 的默认 host
+date: 2019-02-21 21:35:43
+tag: [Debian,hostname,fqdn]
+categories: Linux
+---
+
+## 前言
+部署 RabbitMQ、Mongodb 或其他中间件的单节点，有时会将 bind_ip 之类的设置写作 127.0.0.1。然而在 Debian 系统这么操作可能就给自己挖了“坑”，不管你有没有遇到过 `host` 相关奇怪的部署问题，来看作者的一波填坑历程吧~
+
+### Debian 的 默认 hostname 配置
+在 Debian 系的 Linux 系统，`/etc/hosts`中前两行默认配置如下，其中 `myhostname` 即 `/etc/hostname` 指定的本机名称，可通过 `hostname` 指令查看。
+```
+127.0.0.1 localhost
+127.0.1.1 myhostname
+```
+第二行配置将本机 host 指向了 `127.0.1.1`，这又能对软件的安装造成什么影响呢？请看下面的例子。
+
+<!--more-->
+
+## 影响
+### Mongodb 举例
+例如，我决定初始化一个 Mongodb 的单实例 Replset，并设置了 bindIP 为 127.0.0.1。这时调用 `rs.initiate()`，会得到下列错误。
+```js
+{
+  "ok" : 0,
+  "errmsg" : "No host described in new configuration 1 for replica set rs0 maps to this node",
+  "code" : 93,
+  "codeName" : "InvalidReplicaSetConfig"
+}
+```
+
+其中一个解决方案是，明确传递参数给 initiate 方法。
+```js
+rs.initiate({_id:"yourReplSetName", members: [{"_id":1, "host":"yourHost:yourPort"}]})
+```
+> 参见 https://stackoverflow.com/a/30850962
+
+而生效原因不难解释，由于在初始化过程未指定 `host` ， Mongodb 默认读取了本机的 `hostname` 作为 `yourHost` 参数值。但本机的 hostname 指向 ip 是 127.0.1.1，因此整个 `host` 参数实际变为 `127.0.1.1:27017`。而 bindIP 仅绑定了 127.0.0.1，我们并没有 127.0.1.1:27017 这个服务，通过 `netstat` 也可以证实。
+
+这也解释了另一个解决方案：修改 `/etc/hosts` 文件中本机 hostname 对应的 ip 为 127.0.0.1。
+> 参见 https://stackoverflow.com/a/29055110
+
+解决方案可能还有很多，比如可以在 bindIp 中加上 127.0.1.1。
+
+### RabbitMQ 举例
+同上，RabbitMQ 的部署也存在这个问题。因为 RabbitMQ 默认 nodename 是  rabbit@`hostname`。
+
+在 zulip 的[issue](https://github.com/zulip/zulip/issues/194) 中也看到维护者 timabbott 的回复。
+> We're working on migrating to a system where we change the default rabbitmq
+nodename from rabbit@`hostname` to `zulip@localhost`, for new installs,
+which I think would eliminate this problem, since `localhost` should always
+resolve to 127.0.0.1.
+
+### 疑惑
+既然是普遍的问题，改 hostname 对应的 host 似乎成了最便捷的解决办法。既然如此，Debian 的默认 hostname 不写成 127.0.0.1 ？
+
+这个 host 的主要作用是形成网络环路，并且 127.0.0.1 到 127.255.255.254 都是回环地址，选任一个 ip 都可以。至于为何选择 127.0.1.1，其实源于一个 bug，有兴趣可以从 debian 的 ref 追溯：https://www.debian.org/doc/manuals/debian-reference/ch05.en.html#_the_hostname_resolution
+
+
+## FQDN
+改了这个 host 配置会导致其他异常吗？要解答这个问题，需要先了解 FQDN。
+
+引用[《Linux下配置FQDN》](https://onebitbug.me/2014/06/25/settings-fqdn-in-linux/)的描述。
+
+> 通常 hostname 在某个特定的范围内应该是唯一的，以免产生冲突，这个特定的范围通常用域（dnsdomain）表示。 而 fqdn（full qulified domain name）则应该在一个更大的范围内（比如全球）唯一， 通常 fqdn 是${hostname}.${dnsdomain}。 
+
+一旦修改了hostname到127.0.0.1，python 的 getfqdn() 将返回 `localhost` 而不是 `myhostname.dnsdomain`。结论：“这是为了最大程度的兼容各种工具的的getfqdn()实现”。
+
+但如果你的项目不涉及相关内容，可以放心改动 /etc/hosts。顺便贴一个可以修改主机名对应的host为127.0.0.1"的脚本，可以加到服务的部署脚本中。
+```sh
+sed -i "s/127.0.1.1\s$(hostname)/127.0.0.1 $(hostname)/" /etc/hosts
+```
+
+## 小结
+虽然是个不起眼的问题，姑且串起来看还是有点意思的，~~就这样又水了一篇博客~~。
