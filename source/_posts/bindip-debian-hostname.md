@@ -6,10 +6,10 @@ categories: Linux
 ---
 
 ## 前言
-部署 RabbitMQ、Mongodb 或其他中间件的单节点，有时会将 bind_ip 之类的设置写作 127.0.0.1。然而在 Debian 系统这么操作可能就给自己挖了“坑”，不管你有没有遇到过 `host` 相关奇怪的部署问题，来看作者的一波填坑历程吧~
+部署 RabbitMQ、Mongodb 或其他服务的单节点，有时会将 bind_ip 之类的设置写作 127.0.0.1。然而在 Debian 系统这么操作可能就给自己挖了“坑”，不管你有没有遇到过 `host` 相关奇怪的部署问题，来看作者的一波填坑历程吧~
 
 ### Debian 的 默认 hostname 配置
-在 Debian 系的 Linux 系统，`/etc/hosts`中前两行默认配置如下，其中 `myhostname` 即 `/etc/hostname` 指定的本机名称，可通过 `hostname` 指令查看。
+在 Debian 系的 Linux 系统，`/etc/hosts` 中前两行默认配置如下，其中 `myhostname` 即 `/etc/hostname` 指定的本机名称，可通过 `hostname` 指令查看。
 ```
 127.0.0.1 localhost
 127.0.1.1 myhostname
