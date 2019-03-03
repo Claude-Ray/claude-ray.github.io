@@ -6,10 +6,10 @@ categories: Linux
 ---
 
 ## 前言
-部署 RabbitMQ、Mongodb 或其他服务的单节点，有时会将 bind_ip 之类的设置写作 127.0.0.1。然而在 Debian 系统这么操作可能就给自己挖了“坑”，不管你有没有遇到过 `host` 相关奇怪的部署问题，来看作者的一波填坑历程吧~
+部署 RabbitMQ、MongoDB 或其他服务的单节点，有时会将 bind_ip 之类的设置写作 127.0.0.1。然而在 Debian 系统这么操作可能就给自己挖了“坑”，不管你有没有遇到过 `host` 相关奇怪的部署问题，来看作者的一波填坑历程吧~
 
 ### Debian 的 默认 hostname 配置
-在 Debian 系的 Linux 系统，`/etc/hosts` 中前两行默认配置如下，其中 `myhostname` 即 `/etc/hostname` 指定的本机名称，可通过 `hostname` 指令查看。
+在 Debian 系的 Linux 发行版中，`/etc/hosts` 中前两行默认配置如下，其中 `myhostname` 即 `/etc/hostname` 指定的本机名称，可通过 `hostname` 指令查看。
 ```
 127.0.0.1 localhost
 127.0.1.1 myhostname
@@ -19,8 +19,8 @@ categories: Linux
 <!--more-->
 
 ## 影响
-### Mongodb 举例
-例如，我决定初始化一个 Mongodb 的单实例 Replset，并设置了 bindIP 为 127.0.0.1。这时调用 `rs.initiate()`，会得到下列错误。
+### MongoDB 举例
+我需要初始化一个 MongoDB 的单实例 Replset，并设置了 bindIP 为 127.0.0.1。这时调用 `rs.initiate()`，便会得到下列错误。
 ```js
 {
   "ok" : 0,
@@ -30,23 +30,23 @@ categories: Linux
 }
 ```
 
-其中一个解决方案是，明确传递参数给 initiate 方法。
+对于上面初始化 MongoDB 遇到的问题，其中一个解决方案是明确传递参数给 initiate 方法。
 ```js
 rs.initiate({_id:"yourReplSetName", members: [{"_id":1, "host":"yourHost:yourPort"}]})
 ```
 > 参见 https://stackoverflow.com/a/30850962
 
-而生效原因不难解释，由于在初始化过程未指定 `host` ， Mongodb 默认读取了本机的 `hostname` 作为 `yourHost` 参数值。但本机的 hostname 指向 ip 是 127.0.1.1，因此整个 `host` 参数实际变为 `127.0.1.1:27017`。而 bindIP 仅绑定了 127.0.0.1，我们并没有 127.0.1.1:27017 这个服务，通过 `netstat` 也可以证实。
+而生效原因不难解释，由于在初始化过程未指定 `host` ， MongoDB 默认读取了本机的 `hostname` 作为 `yourHost` 参数值。但本机的 hostname 指向 ip 是 127.0.1.1，因此整个 `host` 参数实际变为 `127.0.1.1:27017`。而 bindIP 仅绑定了 127.0.0.1，我们并没有 127.0.1.1:27017 这个服务，通过 `netstat` 也可以证实。
 
-这也解释了另一个解决方案：修改 `/etc/hosts` 文件中本机 hostname 对应的 ip 为 127.0.0.1。
+这也解释了另一个解决方法：修改 `/etc/hosts` 文件中本机 hostname 对应的 ip 为 127.0.0.1。
 > 参见 https://stackoverflow.com/a/29055110
 
-解决方案可能还有很多，比如可以在 bindIp 中加上 127.0.1.1。
+解决方案可能还有很多，比如可以在 bindIp 中加上 127.0.1.1...
 
 ### RabbitMQ 举例
-同上，RabbitMQ 的部署也存在这个问题。因为 RabbitMQ 默认 nodename 是  rabbit@`hostname`。
+同上，RabbitMQ 的部署也存在相似问题。因为 RabbitMQ 默认 nodename 是 rabbit@`hostname`。
 
-在 zulip 的[issue](https://github.com/zulip/zulip/issues/194) 中也看到维护者 timabbott 的回复。
+在这个 [issue](https://github.com/zulip/zulip/issues/194) 中也看到 zulip 维护者 timabbott 的描述：
 > We're working on migrating to a system where we change the default rabbitmq
 nodename from rabbit@`hostname` to `zulip@localhost`, for new installs,
 which I think would eliminate this problem, since `localhost` should always
@@ -59,7 +59,7 @@ resolve to 127.0.0.1.
 
 
 ## FQDN
-改了这个 host 配置会导致其他异常吗？要解答这个问题，需要先了解 FQDN。
+改了这个 host 配置会导致其他异常吗？要解答这个疑问，需要先了解 FQDN。
 
 引用[《Linux下配置FQDN》](https://onebitbug.me/2014/06/25/settings-fqdn-in-linux/)的描述。
 
