@@ -99,3 +99,12 @@ if (!String.prototype.endsWith) {
 这一步可以通过export来设置，但没找到automatic的配置方法，干脆用系统自带的proxy来处理。按如下步骤一路点，最后填上PAC文件的路径。
 
 Network -> Network proxy -> Automatic -> Configuration URL -> `/etc/proxy/my.pac`
+
+### 浏览器插件
+> 2019-05-15 更新
+
+最近安装了几次 Ubuntu 18.04 都无法通过上述系统配置实现自动跳转，仅全局代理生效，尚未找出原因。
+
+目前推荐的解决方案是通过 `SwitchyOmega` 等 chrome 插件设置自动代理，一次配置随处生效（也可以在单机上选择性关闭），操作更为方案，无须再到系统配置了。
+
+- SwitchyOmega: https://github.com/FelisCatus/SwitchyOmega
