@@ -1,5 +1,5 @@
 ---
-title: 让 Node Server 优雅退出
+title: 让 Node.js Server 优雅退出
 date: 2019-05-23 15:12:28
 tag: [Node.js,graceful-server,pm2]
 ---
@@ -43,7 +43,7 @@ process.on('uncaughtException', async err => {
 
 这也是为什么有人采用 setTimeout 计时强制关闭超时的 server.close。然而 setTimeout 方式治标不治本，既然阻塞退出的根源是 keep-alive 没能立刻关闭，就通过 [server.keepAliveTimeout](https://nodejs.org/api/http.html#http_server_keepalivetimeout) (新增于v8.0.0) 缩短其持续的时间吧。
 
-另外，我们为了把可能的错误都收集起来，server.close 的异常也放到在日志中去(然而，Node 只会在这里抛出一种错误，并且后面会证明这一步没什么必要)。
+另外，我们为了把可能的错误都收集起来，server.close 的异常也放到在日志中去(然而，Node.js 只会在这里抛出一种错误，并且后面会证明这一步没什么必要)。
 
 ```js
 process.on('uncaughtException', async err => {
@@ -76,7 +76,7 @@ io.sockets.server.close()
 如果程序中还保持着 mysql，redis 等等服务的连接，或者有异步的操作的话，继续等这些连接关闭、任务执行完毕吧。
 
 ## unhandledRejection
-再提一下 unhandledRejection，尽管目前 Node 不会因此而主动退出进程，但将来会。
+再提一下 unhandledRejection，尽管目前 Node.js 不会因此而主动退出进程，但将来会。
 
 > In the future, promise rejections that are not handled will terminate the Node.js process with a non-zero exit code
 
