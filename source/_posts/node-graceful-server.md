@@ -1,0 +1,104 @@
+---
+title: 让 Node Server 优雅退出
+date: 2019-05-23 15:12:28
+tag: [Node.js,graceful-server,pm2]
+---
+
+## 前言
+服务进程登场时往往“蓄势而发”，犹抱琵琶半遮面，真正的服务端口跑起来之前做了太多准备工作，然而落幕工作常被人草草了之。
+
+如何让进程自然结束，这本是 hello world 级的基础内容，却有很多项目忽视了这一步的必要性以及重要性。
+
+目前使用 PM2 作为进程管理的项目仍占多数，有相关意识的朋友使用 `pm2 reload` 让进程“平滑”重启，但这就不需要额外的代码处理了吗？
+
+举个例子，未捕获的异常导致服务强行退出时，是不是有可能进程尚未记录异常日志、请求执行到了一半、甚至中断了更复杂的业务工作？PM2 只能截住新的请求，旧的请求是否彻底执行完毕，仍需要业务自己判断。
+
+下面我们先抛开 PM2 ，聊聊基本的进程退出需要哪些工作。首先我们从未捕获的异常说起。
+
+<!--more-->
+
+## uncaughtException
+
+在进程退场前做好日志记录工作，算是基本需求之一。
+
+> 预先约定，本篇示例代码中出现的 `logger` 均为 log4js 或 console 等日志模块的伪代码。
+
+默认情况下，控制台打印 `Uncaught exception xxx` 之后直接退出。如果是用 log4js 记录日志到文件或推送远程日志库，不好意思，很可能发现记录中什么错误信息都没留下。
+
+优雅退出的核心方法是调用 [server.close([callback])](https://nodejs.org/api/net.html#net_server_close_callback)，用于停止 server 接受建立新的连接，并保持已经存在的连接。当所有的连接关闭同时 server 响应 'close' 事件时，server 才会最终关闭，并调用回调函数（可选的）。另外, 如果服务器在未开启状态下执行 close，将会抛出 error 作为回调函数的唯一参数。
+
+在 close 回调函数里可确保没有未结束的请求，也就能放心结束进程。网上随处可见的最基本的处理版本如下：
+
+```js
+process.on('uncaughtException', async err => {
+  logger.error(`Uncaught exception:`, err)
+  server.close(() => {
+    logger.info('Server is closed')
+    process.exit(1)
+  })
+})
+```
+
+然而这离我们的目标还有段距离，代码运行一段时间就会遇到问题，异常记录是有了，server 迟迟没有退出的迹象。因为有很多 http 请求是 keep-alive 的，只要这些连接释放不掉，server 就无法 close，同时会有源源不断的新请求进来。
+
+这也是为什么有人采用 setTimeout 计时强制关闭超时的 server.close。然而 setTimeout 方式治标不治本，既然阻塞退出的根源是 keep-alive 没能立刻关闭，就通过 [server.keepAliveTimeout](https://nodejs.org/api/http.html#http_server_keepalivetimeout) (新增于v8.0.0) 缩短其持续的时间吧。
+
+另外，我们为了把可能的错误都收集起来，server.close 的异常也放到在日志中去(然而，Node 只会在这里抛出一种错误，并且后面会证明这一步没什么必要)。
+
+```js
+process.on('uncaughtException', async err => {
+  logger.fatal(`Uncaught exception:`, err)
+  server.keepAliveTimeout = 1
+  server.close(e => {
+    if (e) {
+      logger.error('Error while server is closing', e)
+    }
+    logger.info('Server is closed')
+    process.exit(1)
+  })
+
+  setTimeout(() => {
+    logger.warn('Server close timeout! Process exit 1')
+    process.exit(1)
+  }, 10000)
+})
+```
+
+上面的代码依然保留了 setTimeout 的退出方式，避免有时候真的出现特殊异常。
+
+接下来我就介绍一种导致关闭失败的情况：该 server 被用来建立了 websocket 连接，如果不显示执行 sockets 的 close 方法，仍然被认为有连接未被释放。因此，不得不再加上socket的处理。
+```js
+io.sockets.server.close()
+```
+
+好吧，进程终于可以正常退出了，这就完了吗？当然没有！
+
+如果程序中还保持着 mysql，redis 等等服务的连接，或者有异步的操作的话，继续等这些连接关闭、任务执行完毕吧。
+
+## unhandledRejection
+再提一下 unhandledRejection，尽管目前 Node 不会因此而主动退出进程，但将来会。
+
+> In the future, promise rejections that are not handled will terminate the Node.js process with a non-zero exit code
+
+业务最好做一下适当把控，最起码，监听这个事件是有助于自定义的日志记录。之前的 uncaughtException 也同样适用。
+
+```js
+process.on('unhandledRejection', async err => {
+  logger.error(`Unhandle Promise rejection:`, err)
+})
+```
+
+## SIGINT
+说完了异常退出，别忘了正常退出，最常见的事件是 `SIGINT`，使用 PM2 停止或重启进程时就会触发。
+
+但处理起来保持和 uncaughtException 一致就好了，除了这里的 exit code 应该是 0。
+
+## PM2 Graceful Shutdown
+有工具自然要好好利用，但 PM2 不止有 reload。
+
+写到这里，笔者犯懒了，文档链接先放这，有时间再考虑搬运，请按需自取 XD
+
+https://pm2.io/doc/en/runtime/best-practices/graceful-shutdown/
+
+## 小结
+综上，进程退场要做的事情其实并不少，日志的记录方式依赖于实际技术栈，不太容易封装成通用的库，一般得结合自身框架定制。
