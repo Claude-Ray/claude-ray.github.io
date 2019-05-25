@@ -25,6 +25,8 @@ tag: [Node.js,graceful-server,pm2]
 
 默认情况下，控制台打印 `Uncaught exception xxx` 之后直接退出。如果是用 log4js 记录日志到文件或推送远程日志库，不好意思，很可能发现记录中什么错误信息都没留下。
 
+### server.close() 是核心
+
 优雅退出的核心方法是调用 [server.close([callback])](https://nodejs.org/api/net.html#net_server_close_callback)，用于停止 server 接受建立新的连接，并保持已经存在的连接。当所有的连接关闭同时 server 响应 'close' 事件时，server 才会最终关闭，并调用回调函数（可选的）。另外, 如果服务器在未开启状态下执行 close，将会抛出 error 作为回调函数的唯一参数。
 
 在 close 回调函数里可确保没有未结束的请求，也就能放心结束进程。网上随处可见的最基本的处理版本如下：
@@ -39,11 +41,15 @@ process.on('uncaughtException', async err => {
 })
 ```
 
+### 确保 close 成功
+
 然而这离我们的目标还有段距离，代码运行一段时间就会遇到问题，异常记录是有了，server 迟迟没有退出的迹象。因为有很多 http 请求是 keep-alive 的，只要这些连接释放不掉，server 就无法 close，同时会有源源不断的新请求进来。
 
 这也是为什么有人采用 setTimeout 计时强制关闭超时的 server.close。然而 setTimeout 方式治标不治本，既然阻塞退出的根源是 keep-alive 没能立刻关闭，就通过 [server.keepAliveTimeout](https://nodejs.org/api/http.html#http_server_keepalivetimeout) (新增于v8.0.0) 缩短其持续的时间吧。
 
-另外，我们为了把可能的错误都收集起来，server.close 的异常也放到在日志中去(然而，Node.js 只会在这里抛出一种错误，并且后面会证明这一步没什么必要)。
+另外，我们为了把可能的错误都收集起来，server.close 的异常也放到在日志中去。
+
+> 事实上，Node.js 只会在这里抛出一种错误 `ERR_SERVER_NOT_RUNNING`，[源码](https://github.com/nodejs/node/blob/master/lib/net.js#L1517)为证，所以这里日志没太多必要，下一小节会加深这个想法。
 
 ```js
 process.on('uncaughtException', async err => {
@@ -66,10 +72,20 @@ process.on('uncaughtException', async err => {
 
 上面的代码依然保留了 setTimeout 的退出方式，避免有时候真的出现特殊异常。
 
-接下来我就介绍一种导致关闭失败的情况：该 server 被用来建立了 websocket 连接，如果不显示执行 sockets 的 close 方法，仍然被认为有连接未被释放。因此，不得不再加上socket的处理。
+### close 其他连接
+
+接下来介绍一种会导致关闭失败的情况：该 server 被用来建立了 websocket 连接。
+```js
+const io = require('socket.io')(server);
+```
+
+如果不显示执行 socket server 的 close 方法，仍然被认为有连接未被释放。因此，不得不再加上 socket 的处理，当然你也可以考虑其他方式断开 socket 连接。
+
 ```js
 io.sockets.server.close()
 ```
+
+需要提醒的是，像上面这样 http 和 websocket 共用端口，直接关闭 websocket 意味着将对同一个 server 调用两次 close 方法，可能导致 http 服务的 close 回调抛错，还记得该回调函数只会抛出的一种错误吗？It's it! 也许 close 回调中的错误真的没有记录的必要了。
 
 好吧，进程终于可以正常退出了，这就完了吗？当然没有！
 
