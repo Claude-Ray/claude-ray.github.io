@@ -85,7 +85,7 @@ const io = require('socket.io')(server);
 io.sockets.server.close()
 ```
 
-需要提醒的是，像上面这样 http 和 websocket 共用端口，直接关闭 websocket 意味着将对同一个 server 调用两次 close 方法，可能导致 http 服务的 close 回调抛错，还记得该回调函数只会抛出的一种错误吗？It's it! 也许 close 回调中的错误真的没有记录的必要了。
+需要提醒的是，像上面这样 http 和 websocket 共用端口，直接关闭 websocket 意味着将对同一个 server 调用两次 close 方法，可能导致 http 服务的 close 回调抛错，还记得该回调函数只会抛出的一种错误吗？Bingo! 也许 close 回调中的错误真的没有记录的必要了。
 
 好吧，进程终于可以正常退出了，这就完了吗？当然没有！
 
