@@ -68,7 +68,7 @@ pagination_dir: page
 plugins: hexo-generate-feed
 
 ## Themes: https://hexo.io/themes/
-theme: next
+theme: next7
 
 # Deployment
 ## Docs: https://hexo.io/docs/deployment.html
@@ -79,3 +79,10 @@ deploy:
 
 sitemap:
   path: sitemap.xml
+
+symbols_count_time:
+  symbols: true
+  time: true
+  total_symbols: true
+  total_time: true
+  exclude_codeblock: false
