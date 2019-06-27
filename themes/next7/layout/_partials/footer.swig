@@ -60,3 +60,4 @@
   #}{{ theme.footer.custom_text }}{#
 #}</div>
 {% endif %}
+Welcome To My <a href="https://github.com/Claude-Ray/claude-ray.github.io">Homepage</a>

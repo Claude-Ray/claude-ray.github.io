@@ -24,6 +24,14 @@ if hexo-config('avatar.rotated') {
   }
 }
 
+if hexo-config('avatar.animation') {
+  // FIXME: Custom avatar hover
+  .site-author-image:hover {
+    -webkit-animation: jello 1s;
+    animation: jello 1s;
+  }
+}
+
 .site-author-name {
   margin: $site-author-name-margin;
   text-align: $site-author-name-align;
