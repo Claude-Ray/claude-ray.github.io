@@ -37,6 +37,18 @@ categories: Node.js
 
 首先我们简称 Elastic APM client 为 agent。agent 到日志采集服务 apm-server 的通讯方式为 http 或 https。请求方法被封装到了 `elastic-http-client` 模块，负责将 Transaction, Error, Metric, Span 这类指标发送到 apm-server，并且还包含格式检查、过长的信息截断的功能。
 
+apm-server 负责将采集到的数据存储到 Elasticsearch。
+
+最终在 Kibana 可视化地分析 Elasticsearch 中存储的数据。
+
+```
+elastic-apm-node(node)  ➡   apm-server(golang)
+                                   ⬇
+     kibana(展示层)      ➡   elasticsearch(数据层)
+```
+
+> 数据全部由自己的 Elasticsearch 掌控，在此基础上能定制出更多分析工具。
+
 ## 目录结构
 
 相比商业 APM 项目，elastic-apm-node 结构非常简洁。
@@ -102,21 +114,47 @@ Error.prepareStackTrace(error, structuredStackTrace)
 
 默认地，Elastic APM 只记录 uncaughtException 和一小部分内部 patch 代码的错误。如果有较强的查错需求，得主动在业务中调用 `agent.captureError` 方法记录异常。
 
-另外，若项目有特殊异常上报等原因需要监听 uncaughtException 事件，**应当在 agent start() 之前覆盖 [agent.handleUncaughtExceptions](https://www.elastic.co/guide/en/apm/agent/nodejs/current/agent-api.html#apm-handle-uncaught-exceptions) 方法**，这样才能使其默认的捕获后 exit 的处理失效，以免进程在任务执行结束之前被 APM 的监听器强制结束。
+另外，若项目有特殊异常上报等原因需要监听 uncaughtException 事件，**应当在 agent start() `之后`覆盖 [agent.handleUncaughtExceptions](https://www.elastic.co/guide/en/apm/agent/nodejs/current/agent-api.html#apm-handle-uncaught-exceptions) 方法**，这样才能使其默认的捕获后 process.exit 的处理失效，以免进程在任务执行结束之前被 APM 的监听器强制退出。用法：
+```js
+const apm = require('elastic-apm-node').start()
+apm.handleUncaughtExceptions(err => {
+  // Do your own stuff... and then exit:
+  process.exit(1)
+})
+```
+如果 handleUncaughtExceptions 在 start 之前调用，会被重新覆盖。
+```js
+Agent.prototype.handleUncaughtExceptions = function (cb) {
+  var agent = this
+
+  if (this._uncaughtExceptionListener) {
+    process.removeListener('uncaughtException', this._uncaughtExceptionListener)
+  }
+
+  this._uncaughtExceptionListener = function (err) {
+    agent.logger.debug('Elastic APM caught unhandled exception: %s', err.message)
+    agent.captureError(err, { handled: false }, function () {
+      cb ? cb(err) : process.exit(1)
+    })
+  }
+
+  process.on('uncaughtException', this._uncaughtExceptionListener)
+}
+```
 
 ## Metric
 
 一般来说，Node.js 原生暴露的接口足够对进程性能的基本状况有所判断了，但 APM 系统总是希望监控更详细的信息。
 
-尤其是系统 CPU、内存占用率的走势图。一部分探针选择用纯 JS 计算，另一部分探针选择使用 C++ 获取/计算。使用 C++ 的库一般还会获取更复杂的指标，如 [appmetrics](https://github.com/RuntimeTools/appmetrics) 会获取一部分 GC、Event loop 信息（然而 GC 耗费占比的监控在 Node.js Runtime 下无法实现，信息来自：[关于Nodejs的性能监控思考？ - hyj1991的回答 - 知乎](https://www.zhihu.com/question/315261661/answer/637417008)）
+尤其是系统 CPU、内存占用率的走势图，原生 API 获取到的信息仍需要一定的计算工作。在简洁和效率的取舍上，一部分探针选择用纯 JS 计算，另一部分探针选择使用 C++ 获取/计算。使用 C++ 的库一般还会获取更复杂的指标，如 [appmetrics](https://github.com/RuntimeTools/appmetrics) 会获取一部分 GC、Event loop 信息（然而 GC 耗费占比的监控在 Node.js Runtime 下无法实现，信息来自：[关于Nodejs的性能监控思考？ - hyj1991的回答 - 知乎](https://www.zhihu.com/question/315261661/answer/637417008)）
 
-Elastic APM 是相对小清新的一派，如果发现当前服务环境 `process.platform` 是 Linux，它会从/proc/ 目录定时获取系统性能快照，无需额外计算，如果是其他系统，再使用 JS 通过算法计算。
+Elastic APM 是相对小清新的一派，它选择纯 JS 实现，只针对 Linux 环境进行优化。如果发现当前服务环境 `process.platform` 是 Linux，它会从 /proc/ 目录定时获取系统性能快照，以降低计算量。如果是其他系统，再使用 JS 通过算法计算。
 
-> proc 文件的描述可以查看 linux 文件系统文档 https://github.com/torvalds/linux/blob/master/Documentation/filesystems/proc.txt
+> 实际上 Node.js 的底层 `libuv` 就是靠读取 proc 文件来采集 Linux 相关信息的。关于 proc 的介绍可以阅读 Linux 文件系统文档 https://github.com/torvalds/linux/blob/master/Documentation/filesystems/proc.txt
 
 - /proc/meminfo: 记录系统内存信息，用来获取两个指标：MemAvailable 和 MemTotal。对应 `os.totalmem()` 和 `os.freemem()`。
 - /proc/stat: 记录 CPU 活动信息，用来获取两个指标：cpuTotal 和 cpuUsage。这一步用 Node.js 计算略麻烦，需要定时缓存 `os.cpus()` 的 `times.total` `times.idle`指标。
-- /proc/self/stat: 不同于前面两个记录系统级信息的文件，此文件记录了当前进程的所有活动信息。用来获取进程 CPU 使用率和 RSS 内存。对应 `processTop.cpu().percent / cpus.length` 和 `process.memoryUsage().rss`。
+- /proc/self/stat: 不同于前面两个记录系统级信息的文件，此文件记录了当前进程的所有活动信息。可以用来获取进程 CPU、内存使用状况。原本 CPU 使用率需要除法运算，对应 `process.cpuUsage([previousValue])`，`process.hrtime([time])`，而通过此文件可以简化为加减法运算。获取的内存数据也可以用来计算 `process.memoryUsage().rss`，不过还是直接使用 Node.js 的 API 更简单。
 
 ## Transaction
 Elastic APM 中的事务，类似于 opentracing 中的 Span，但把一个请求中所有的 Span 抽象为一个概念。
