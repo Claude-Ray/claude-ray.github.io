@@ -2,6 +2,7 @@
 title: 让 Node.js Server 优雅退出
 date: 2019-05-23 15:12:28
 tag: [Node.js,graceful-server,pm2]
+categories: Node.js
 ---
 
 ## 前言
