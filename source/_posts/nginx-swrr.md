@@ -28,6 +28,7 @@ Smooth Weighted Round-Robin (SWRR) 是 nginx 默认的加权负载均衡算法�
 |0|0|0|
 
 经过加权
+
 |CWa|CWb|CWc|
 |---|---|---|
 |Wa|Wb|Wc|
@@ -40,6 +41,7 @@ W 中最大值为 Wa，减去 Wn，可以表示为 CWa = Wa - Wn = 0 - (Wb + Wc)
 |-(Wb+Wc)|Wb|Wc|
 
 依此类推，第二次选择之后，CW 变为
+
 |CWa|CWb|CWc|
 |---|---|---|
 |2 * Wa - Wn * 2|2 * Wb|2 * Wc|
@@ -54,6 +56,7 @@ W 中最大值为 Wa，减去 Wn，可以表示为 CWa = Wa - Wn = 0 - (Wb + Wc)
 ```
 
 第 n 次选择之后，CW 等同于
+
 |CWa|CWb|CWc|
 |---|---|---|
 |n * Wa - Wn * n|n * Wb|n * Wc|
