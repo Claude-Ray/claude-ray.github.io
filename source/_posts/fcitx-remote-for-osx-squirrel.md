@@ -2,7 +2,7 @@
 title: fcitx-remote-for-osx 设置 Squirrel 输入法切换
 date: 2019-07-17 20:55:30
 tags: [squirrel,Vim,emacs evil,input method]
-categories: 随笔
+categories: Mac
 ---
 
 初衷是解决中文输入法在 vim/evil 键位下的 `insert` 模式和 `normal` 模式的切换问题，实现 `normal` 模式自动切英文、`insert` 模式回复之前的输入状态。
