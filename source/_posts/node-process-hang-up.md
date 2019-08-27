@@ -141,7 +141,7 @@ _createIntervalCallback(intervalInSeconds) {
 最后 apm 启动头部长这个样子
 ```js
 // 自定义 APM_ENABLE 作为开关条件
-const enableAPM = process.env.APM_ENABLE || process.env.NODE_ENV || !process.env.ETS_REGISTER_PID;
+const enableAPM = process.env.APM_ENABLE || (process.env.NODE_ENV && !process.env.ETS_REGISTER_PID);
 if (enableAPM) {
   // 除了 NODE_ENV，也可以使用自定义的 ENV
   const options = getOptionsByENV(process.env.NODE_ENV)
