@@ -28,6 +28,7 @@ i18n_dir: :lang
 skip_render: 
   - README.md
   - LICENSE.md
+  - 404.html
   - googlea34ff060e6cf98f2.html
 
 # Writing
@@ -68,7 +69,7 @@ pagination_dir: page
 plugins: hexo-generate-feed
 
 ## Themes: https://hexo.io/themes/
-theme: next7
+theme: next7.4
 
 # Deployment
 ## Docs: https://hexo.io/docs/deployment.html
