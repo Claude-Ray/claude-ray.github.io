@@ -1,0 +1,8 @@
+-/node_modules
+-/.deploy_git
+-/public
+-/themes
+-/.git
+-/.gitignore
+-/.package.json
+-/.package-lock.json
