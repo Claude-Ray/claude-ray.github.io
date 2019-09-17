@@ -42,9 +42,9 @@ Egg 官网基本做到了呈现所有“必知必会”的内容，再写一份 
 
 进阶 Egg 的步骤包括但不限于通读官网文档，至少要熟悉下面两个话题才能算了解了 Egg。
 
-- 多进程模型 [传送门](https://eggjs.org/zh-cn/core/cluster-and-ipc.html)
+- [多进程模型](https://eggjs.org/zh-cn/core/cluster-and-ipc.html)
 
-- loader && 生命周期 [传送门](https://eggjs.org/zh-cn/advanced/loader.html)
+- [loader && 生命周期](https://eggjs.org/zh-cn/advanced/loader.html)
 
 # 深入
 
