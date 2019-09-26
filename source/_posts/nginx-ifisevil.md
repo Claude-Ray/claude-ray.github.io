@@ -1,22 +1,24 @@
 ---
-title: Nginx的if使用须知
+title: Nginx 的 if 使用须知
 date: 2019-01-09 22:42:14
 tags: [Nginx, If Is Evil]
 categories: Nginx
 ---
 
-被 nginx 官方自我批判的 if 语句，《[If Is Evil](https://www.nginx.com/resources/wiki/start/topics/depth/ifisevil/)》——这应该成为每位开发者初次使用 nginx 的 if 之前必读的文章。
+有关被 nginx 官方自我批判的 if 语句，《[If Is Evil](https://www.nginx.com/resources/wiki/start/topics/depth/ifisevil/)》—— 着实应成为每位开发者初次使用 nginx if 之前必读的文章。
 
-即使一年前就开始用 nginx 和 if 的组合做跳转，但涉及的功能太简单，没能见识到它的真面目。当我在多个 if 内处理 proxy_pass 时，噩梦就降临了。
+即使笔者一年前就开始接触使用 nginx 和 if 的组合做 url 跳转，但涉及的功能太简单，一直没能见识到它的真面目。直到近期在多个 if 内处理 proxy_pass 时，噩梦果真就降临了……希望大家仔细阅读上面的文章，引以为戒。
+
+如果想快速知道为什么 “if is evil”，以及如何避免被坑，可以向下阅读一探究竟。
 <!--more-->
 
 # Why
-if 本身是 rewrite 模块的一部分，然而在非 rewrite 环境下也可以用，显然这是错误的用法，进而引发很多出乎意料的问题。
+nginx if 语句其实是 rewrite 模块的一部分，尽管在非 rewrite 环境下也可以用，但必须要意识到这是一种误用，因此才能理解为何它会引发众多意料之外的问题。
 
 # How
-最直观的还是来看代码，下面引用 If Is Evil 的 [Example 部分](https://www.nginx.com/resources/wiki/start/topics/depth/ifisevil/#examples)，用 30 秒即可浏览大部分 evil 场景。
+下面的示例代码引自 If Is Evil 的 [Example 部分](https://www.nginx.com/resources/wiki/start/topics/depth/ifisevil/#examples)，用 30 秒即可浏览大部分 evil 场景。
 
-1. 只有X-Second会被设置
+1. 只有 X-Second 会被设置
 ```nginx
 location /only-one-if {
     set $true 1;
@@ -89,7 +91,7 @@ location ~* ^/if-and-alias/(?<file>.*) {
 既然 if 如此之坑，最好的办法就是乖乖禁用 if，但拗不过诸位喜欢折腾的灵魂，特殊场景还是可以用的。下面列举最常见的避坑方案。
 
 ## 官方认可的两种用法
-再怎么说，if 就是为 rewrite 服务的，如果有 bug 早被封杀了。
+再怎么说，if 是为 rewrite 服务的，在正确的场合做正确的事，没毛病。
 ```nginx
 #The only 100% safe things which may be done inside if in a location context are:
 
@@ -105,7 +107,7 @@ location /proxy-pass-uri {
 
     if ($arg_param1 ~ "hello") {
       proxy_pass http://127.0.0.1:8080/;
-      # 这里的break将阻止下面if的执行
+      # 这里的 break 将阻止下面 if 的执行
       break;
     }
 
@@ -131,5 +133,5 @@ nginScript (njs) 是 nginx 在 2015 发布的 javascript 配置方案。类似�
 # 小结
 到此，坑点和避坑的方法都阐明了，如果还想了解 nginx if 背后的机制，或有其他疑问，请继续探寻《If Is Evil》原文吧！
 
-再次附上传送门：
-> https://www.nginx.com/resources/wiki/start/topics/depth/ifisevil/
+# Reference
+- https://www.nginx.com/resources/wiki/start/topics/depth/ifisevil/
