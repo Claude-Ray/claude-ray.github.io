@@ -46,7 +46,23 @@ require('egg').startCluster({
   }
 }
 ```
-这是目前最推荐的做法，不影响 egg 工具链的正常使用。
+这是目前~~最推荐~~的做法，不影响 egg 工具链的正常使用。
+
+#### 2019-10-17 更正
+
+> 感谢 [@wenpin](https://github.com/wpchou) 提示
+
+`egg.require` 配置只是 egg-bin 提供的接口，并在[文档](https://github.com/eggjs/egg-bin#options)上明确记录。然而 egg-scripts 目前还没有提供此入口，只能通过 `--require` 导入，egg-bin 也同样支持，这得益于 egg-cluster 的实现。
+
+```json
+{
+  "scripts": {
+    "start": "egg-scripts start --require=@yourscope/elastic-apm"
+  }
+}
+```
+
+`--require` 不能使用相对路径，比起使用绝对路径，通过 npm 包来引入更方便一些。(egg-scripts 的 issues 关闭了，不然问问阻断他们支持 egg.require 的原因...)
 
 # 编写补丁
 
