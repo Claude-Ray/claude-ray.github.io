@@ -8,8 +8,7 @@ categories: Mac
 想必大家已经知道，EasyConnect 会在后台强行添加名为 EasyMonitor 的开机自启守护进程，网上已经有关闭教程了
 
 ```sh
-# 权限不足时补上 sudo
-launchctl unload /Library/LaunchDaemons/com.sangfor.EasyMonitor.plist
+sudo launchctl unload /Library/LaunchDaemons/com.sangfor.EasyMonitor.plist
 ```
 
 可实际上 EasyConnect 还启动了另一个“杀不掉”的后台进程 ECAgent，活动频率很低，似乎不会造成内存泄漏，略显不起眼。但这无法作为它肆意常驻的理由。
@@ -42,7 +41,8 @@ Initialization failed. Please try reinstalling!
 没办法，只能向恶势力低头，需要使用时，必须重新加载 EasyMonitor。
 
 ```sh
-launchctl unload /Library/LaunchDaemons/com.sangfor.EasyMonitor.plist
+# EasyMonitor v7.6.7 开始 EasyMonitor 必须在 root 权限下运行，此前版本可以不加 sudo
+sudo launchctl load /Library/LaunchDaemons/com.sangfor.EasyMonitor.plist
 ```
 
 而 ECAgent 就没这么麻烦了，它根本不必后台常驻 —— EasyConnect 启动时会自己创建一个，并且会随着 EasyConnect 进程一起退出。最终我删掉了 `com.sangfor.ECAgentProxy.plist` 文件的备份。
