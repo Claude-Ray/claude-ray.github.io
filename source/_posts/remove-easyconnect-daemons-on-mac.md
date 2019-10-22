@@ -41,7 +41,7 @@ Initialization failed. Please try reinstalling!
 没办法，只能向恶势力低头，需要使用时，必须重新加载 EasyMonitor。
 
 ```sh
-# EasyMonitor v7.6.7 开始 EasyMonitor 必须在 root 权限下运行，此前版本可以不加 sudo
+# EasyConnect v7.6.7 开始 EasyMonitor 必须在 root 权限下运行，此前版本可以不加 sudo
 sudo launchctl load /Library/LaunchDaemons/com.sangfor.EasyMonitor.plist
 ```
 
