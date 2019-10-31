@@ -4,7 +4,7 @@ date: 2017-06-15 09:41:30
 
 <div style="font-size:24px;font-weight:bold" > About Me </div>
 
-码畜一枚，主Web服务端，Unix信徒。
+码畜一枚，主 Web 服务端。
 
 享受创造不喜搬运，写作频率不高，尽量做到把挖的坑填上。
 
