@@ -1,7 +1,7 @@
 ---
 title: Verdaccio 性能优化：代理分流
 date: 2019-11-30 19:08:03
-tags: [Node.js,Verdaccio,private npm registry]
+tags: [Node.js,Verdaccio,private npm registry,npm]
 categories: Node.js
 ---
 

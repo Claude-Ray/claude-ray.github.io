@@ -1,7 +1,7 @@
 ---
 title: Verdaccio 性能优化：上游路径转发
 date: 2019-10-22 19:32:39
-tags: [Node.js,Verdaccio,private npm registry]
+tags: [Node.js,Verdaccio,private npm registry,npm]
 categories: Node.js
 ---
 
