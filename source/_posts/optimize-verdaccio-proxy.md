@@ -38,7 +38,7 @@ categories: Node.js
 
 有了代理层，就可以忽略 Verdaccio 内部的各种逻辑，不受技术栈的约束，编写少量的代码，便能完成主要接口的分流。
 
-首要的接口是 `/:package/:version?` ，释放私服最大的查询压力，原因可以看[这里的解释](https://claude-ray.github.io/2019/10/22/optimize-verdaccio-package-route/#原因)。
+首要的接口是 `/:package/:version?` ，释放私服最大的查询压力，原因可以看[这里的解释](https://claude-ray.github.io/2019/10/22/optimize-verdaccio-package-route)。
 
 次要的接口是 `/:package/-/:filename` ，也就是实际的下载接口。并且其中还涉及另一个极为有利的优化。
 
