@@ -129,9 +129,9 @@ config.bind('<Meta-Ctrl-f>', 'config-cycle window.hide_decoration false true')
 
 ## 总结
 
-经过一个星期的使用，qutebrowser 流畅的操作体验令我开怀不矣，现在将它作为主力浏览器。
+经过一个多星期的使用，qutebrowser 流畅的操作体验令我开怀不矣，现在彻底将它作为主力浏览器。
 
-另一方面，它支持 insert 模式的按键定制，可以让我们在其他系统环境中像 Mac 一样在浏览器中使用 Emacs-like 的键位做行内编辑！
+另一方面，它支持 insert 模式的按键定制，可以让我们在其他系统环境下，像 Mac 一样在浏览器中使用 Emacs-like 键位做行内编辑！
 
 假如你之前从未使用过 Vim-like 的浏览器插件，可以先把 Vimium 装起来。即使键位需要一点时间适应，可它胜在有着极大的包容性——不存在模式切换，没有按键冲突，也就不用担心它会降低你既有的操作效率。
 
