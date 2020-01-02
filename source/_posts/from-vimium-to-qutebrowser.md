@@ -9,7 +9,7 @@ categories: Essay
 
 曾经偶然听闻 qutebrowser 大名，但得知它没有让我难以割舍的 Dark Reader 插件，因此擦肩而过。
 
-然而 Vimium 的小缺陷屡屡挑衅我的耐心，直到真正开始使用 qutebrowser，终于让我定下了迁移的决心。
+然而 Vimium 的小缺陷屡屡挑衅我的耐心，直到真正开始使用 qutebrowser，终于让我下定了迁移的决心。
 
 <!--more-->
 
@@ -17,9 +17,9 @@ categories: Essay
 
 Vimium 只是一个浏览器插件，Firefox 和 Chrome 均有支持，可以说在不破坏原有操作体验的同时，补充了一些键盘操作的效率提升。
 
-可它的工作方式是页面注入式的，必须等当前页面加载出来后才能使用键盘操作，而且一些页面注定无法使用键盘操作，例如浏览器自己的插件商店、配置页。
+可它的工作方式是页面注入式的，必须等当前页面完成初始加载后才能使用键盘操作，又有一些页面注定无法完成注入，例如浏览器自己的插件商店、配置页。
 
-qutebrowser 则是一个使用 Python、PyQt 实现的轻量 GUI 跨平台浏览器，默认基于 Chromium 内核，并专注于键盘操作。不论页面是否完成加载，都可以随时使用键盘做出强大快捷的操作。
+qutebrowser 则是一个 PyQt 实现的轻量 GUI 跨平台浏览器，默认基于 Chromium 内核，并专注于键盘操作。不论页面是否完成加载，都可以随时使用键盘做出强大快捷的操作。
 
 可惜缺少插件系统，且对 inspector 的支持很差，Web 开发者们可能难以接受。
 
@@ -107,19 +107,19 @@ config.bind('<Escape>', 'spawn fcitx-remote -t ;; leave-mode ;; fake-key <Escape
 
 在 Mac 上，qutebrowser 的 title bar 实在是又丑又大，可以通过 `c.window.hide_decoration = True` 来关闭它。但至今还存在的一个问题是关闭 title bar 之后，无法再调整窗口大小。
 
-即使在更改设置之前 qutebrowser 窗口处于最大化状态，hide_decoration 只能起到隐藏 title bar 的效果，界面上依然缺着一小条。
+即使在更改设置之前 qutebrowser 窗口处于最大化状态，hide_decoration 只能起到隐藏 title bar 的效果，体现到界面上就是残缺的一条空白。身为强迫症简直不能忍！
 
-作为强迫症简直不能忍啊，还好一番琢磨，找到了临时的解决办法，并且重启 qutebrowser，甚至重启电脑之后仍然能保持这个状态。现在就把这个办法分享给大家！
+一番琢磨，终于找到了临时的解决办法：
 
-1. 先把 hide_decoration 关掉，在浏览器上快捷执行`:set window.hide_decoration false`
-2. 再将浏览器全屏，对应指令`:fullscreen` 
+1. 先把 hide_decoration 关掉，在浏览器上快捷执行 `:set window.hide_decoration false`
+2. 再将浏览器全屏，对应指令 `:fullscreen`
 3. 执行 `:set window.hide_decoration true`
 4. 按 `Ctrl+Up` 或用手势操作进入 Mission Control 界面，将最大化的 qutebrowser 从新桌面中拖拽到原来的桌面
 5. 这时 qutebrowser 进入短暂的“无响应”阶段，用鼠标点击或滚动一下窗口的任意地方即可重新激活
 
-这样就获得了无边框的最大化 qutebrowser，enjoy！
+这样就获得了无边框最大化的 qutebrowser。经过检验，重启 qutebrowser，甚至重启系统之后均能保持窗口最大化。
 
-我还加了热键便于管理 title bar，在 config.py 中添加：
+我还加了 title bar 的热键简化操作（下面 Meta 实为 Command/Super）：
 
 ```py
 c.window.hide_decoration = True

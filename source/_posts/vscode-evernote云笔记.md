@@ -1,8 +1,8 @@
 ---
 title: vscode+evernote云笔记
 date: 2017-12-05 23:40:53
-tags: 
-categories: 随笔
+tags: [Evernote,VSCode]
+categories: Essay
 description: 个人笔记这种重要东西，放在墙内是不放心的，由于内容基础又杂乱，不能像博客一样托管到github或gitbook，适合单独找一个地方存放。由于习惯使用Markdown记录笔记，主要为了查阅方便，我上个月瞄向了不支持Markdown格式的Evernote，借插件实现Markdown笔记存储。
 ---
 

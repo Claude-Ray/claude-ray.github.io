@@ -2,7 +2,7 @@
 title: From Journeyman to Master
 date: 2019-09-10 23:45:17
 tags: [Books]
-categories: 随笔
+categories: Essay
 ---
 
 《 The Pragmatic Programmer: From Journeyman to Master 》这本书已加入愿望单许久，最近终于在通勤路上读完了。对于处于或将处于熟练工阶段的程序员，毫无疑问这是本值得用心阅读的书，因此我也写一下短评和推荐理由。

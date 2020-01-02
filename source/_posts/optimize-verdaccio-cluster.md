@@ -113,7 +113,9 @@ module.exports = new CacheCenter();
 ```
 
 ### 页面搜索优化
-最后顺便说一点，Verdaccio web 页面的 /search 接口性能极差，实现也存在诸多问题。这里值得加一层内存缓存，等到新包发布时刷新。并且它原本不支持 @scope 搜索，在创建索引的步骤可以加一行专用于 scope 信息。至于有些情况搜不到，这是它依赖的 lunr 引擎所决定的，就放过 Verdaccio 吧。
+顺便一提，Verdaccio web 页面的 /search 接口性能极差，实现也存在诸多问题。此处值得加一层内存缓存，等到新包发布时刷新。
+
+早期 Verdaccio 不支持使用 name 搜索名为 @scope/name 的包，可增加一条 name 专用的索引字段促成改进。根源是依赖的 lunr 引擎版本过低（0.7.0），但最新 lunr 的表现依然不太理想。
 
 ```js
 class Search {
@@ -158,7 +160,7 @@ function getUnscopedName(name) {
 ## 总结
 为 Verdaccio 开启 Cluster 能力并不是一个轻松的做法，但经过这个系列解读，却可以轻松地作出选择。
 
-如果只是想一定程度上提高处理高并发的性能，可以采取上一篇[代理分流](https://claude-ray.github.io/2019/10/22/optimize-verdaccio-proxy/)的做法，代理可以帮你分担 99%以上的压力。
+如果只是想一定程度上提高处理高并发的性能，可以采取上一篇[代理分流](https://claude-ray.github.io/2019/10/22/optimize-verdaccio-proxy/)的做法，代理可以帮你分担 99% 以上的压力。
 
 如果想进一步提升性能，实现应用的平滑重启，本文单机 Cluster 并配合 pm2 reload 的做法不妨一试。
 
