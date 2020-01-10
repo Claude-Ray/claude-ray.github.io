@@ -54,8 +54,8 @@ osascript -e 'id of app "squirrel"'
 git clone https://github.com/dangxuandev/fcitx-remote-for-osx
 cd fcitx-remote-for-osx
 ./build.py build squirrel-rime-upstream
-cp ./fcitx-remote-squirrel-rime-upstream /usr/local/bin/fcitx-remote
-ln -snf /usr/local/bin/fcitx-remote /usr/local/bin/fcitx-remote-squirrel-rime
+cp ./fcitx-remote-squirrel-rime-upstream /usr/local/bin/fcitx-remote-squirrel-rime
+ln -snf /usr/local/bin/fcitx-remote-squirrel-rime /usr/local/bin/fcitx-remote
 ```
 
 基本可以正常使用了，也没有出现切换延迟较高的问题，但偶尔遇到 squirrel 卡住，无法切换中英，在 squirrel issues 可以看到了有许多相关 bug。但是并没有人给出终极的解决方案，佛振认为这是其他软件的问题，暂不予关注，等他参与修复可能遥遥无期。详见这个已关闭的 [issue](https://github.com/rime/squirrel/issues/292)
