@@ -69,7 +69,7 @@ pagination_dir: page
 plugins: hexo-generate-feed
 
 ## Themes: https://hexo.io/themes/
-theme: next7.4
+theme: next
 
 # Deployment
 ## Docs: https://hexo.io/docs/deployment.html
