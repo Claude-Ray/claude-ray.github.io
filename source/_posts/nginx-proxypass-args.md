@@ -38,4 +38,4 @@ proxy_pass http://remote_host$uri$is_args$args;
 ```
 
 ## 小结
-很多软件包的疑难杂症都可以试着查阅 change log，而且有些情况下检索历史变更比查 issue 更方便。之前[《lodash3升级4踩坑》](https://claude-ray.github.io/2017/10/05/lodash-3-to-4/) 一文提到的 lodash 升级大版本导致 merge 用法变更，也是查 history 定位到了问题。
+很多软件包的疑难杂症都可以试着查阅 change log，而且有些情况下检索历史变更比查 issue 更方便。之前[《lodash3升级4踩坑》](http://claude-ray.com/2017/10/05/lodash-3-to-4/) 一文提到的 lodash 升级大版本导致 merge 用法变更，也是查 history 定位到了问题。

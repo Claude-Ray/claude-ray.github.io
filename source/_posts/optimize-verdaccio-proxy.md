@@ -9,7 +9,7 @@ categories: Node.js
 
 这里的 [Verdaccio](https://github.com/verdaccio/verdaccio) 是指用于搭建轻量级 npm 私有仓库的开源解决方案，以下简称 npm 私服。
 
-前段时间写了一点分流相关的[优化思路](https://claude-ray.github.io/2019/10/22/optimize-verdaccio-package-route/)，但那是以节省资源开销为主、不冲破原有结构的微调，从结果上看，甚至不是合格的优化。
+前段时间写了一点分流相关的[优化思路](http://claude-ray.com/2019/10/22/optimize-verdaccio-package-route/)，但那是以节省资源开销为主、不冲破原有结构的微调，从结果上看，甚至不是合格的优化。
 
 随着用户（请求）数量的上升，服务响应速度和效率其实才是最要紧的问题，节省资源终究不能改善这一点。因此我决定实施上次浮现在脑中的想法，将内外网的 npm 包流量彻底分流。
 
@@ -38,7 +38,7 @@ categories: Node.js
 
 有了代理层，就可以忽略 Verdaccio 内部的各种逻辑，不受技术栈的约束，编写少量的代码，便能完成主要接口的分流。
 
-首要的接口是 `/:package/:version?` ，释放私服最大的查询压力，原因可以看[这里的解释](https://claude-ray.github.io/2019/10/22/optimize-verdaccio-package-route)。
+首要的接口是 `/:package/:version?` ，释放私服最大的查询压力，原因可以看[这里的解释](http://claude-ray.com/2019/10/22/optimize-verdaccio-package-route)。
 
 次要的接口是 `/:package/-/:filename` ，也就是实际的下载接口。并且其中还涉及另一个极为有利的优化。
 

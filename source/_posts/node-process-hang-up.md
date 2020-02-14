@@ -27,7 +27,7 @@ process._getActiveRequests();
 
 # 问题经过
 
-背景是为 ts + egg 项目引入 apm 探针，由于 apm 必须在“启动文件”的第一行完成加载，即整个 egg 的生命周期开始之前，因此需要使用独立的脚本或指令进行启动。具体如何处理可以参考这篇[博客](https://claude-ray.github.io/2019/07/12/elastic-apm-node-egg)。
+背景是为 ts + egg 项目引入 apm 探针，由于 apm 必须在“启动文件”的第一行完成加载，即整个 egg 的生命周期开始之前，因此需要使用独立的脚本或指令进行启动。具体如何处理可以参考这篇[博客](http://claude-ray.com/2019/07/12/elastic-apm-node-egg)。
 
 问题就出在脱离了 egg 的声明周期，得额外管理不同运行环境下 apm-server（APM 数据采集服务器）的地址配置。可能第一时间就能想到 Node.js 的环境变量，思路没错，毕竟程序和 egg-bin 绑定，NODE_ENV 环境变量的命名符合规范，主要为 development、test、production。特定环境读取特定的即可。
 

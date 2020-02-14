@@ -17,7 +17,7 @@ Node内部不支持直接操作GBK字符串，而实际也并不需要如此。
 ## 请求返回值
 最常用且容易处理，通常我们使用`request`发起http请求，options中设置`encoding: null`，这样返回的res.body为buffer，再对buffer进行解码`iconv.decode(res.body, encoding)`。
 
-> 引用：[request返回值中文乱码问题](https://claude-ray.github.io/2018/02/26/request%E4%B8%AD%E6%96%87%E4%B9%B1%E7%A0%81%E9%97%AE%E9%A2%98/#%E7%BC%96%E7%A0%81)
+> 引用：[request返回值中文乱码问题](http://claude-ray.com/2018/02/26/request%E4%B8%AD%E6%96%87%E4%B9%B1%E7%A0%81%E9%97%AE%E9%A2%98/#%E7%BC%96%E7%A0%81)
 
 ## 请求参数
 这里直接用`iconv-lite`处理略显复杂，建议上[urlencode](https://github.com/node-modules/urlencode)。

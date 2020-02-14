@@ -69,5 +69,5 @@ $font-size-headings-base  = 1.6em;
 
 ## Reference
 
-- [Hexo NexT 主题升级 7.1.2](https://claude-ray.github.io/2019/06/28/hexo-theme-next-upgrade-7/)
+- [Hexo NexT 主题升级 7.1.2](http://claude-ray.com/2019/06/28/hexo-theme-next-upgrade-7/)
 - [theme-next.org](https://theme-next.org/)

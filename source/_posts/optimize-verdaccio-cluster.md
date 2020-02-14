@@ -160,7 +160,7 @@ function getUnscopedName(name) {
 ## 总结
 为 Verdaccio 开启 Cluster 能力并不是一个轻松的做法，但经过这个系列解读，却可以轻松地作出选择。
 
-如果只是想一定程度上提高处理高并发的性能，可以采取上一篇[代理分流](https://claude-ray.github.io/2019/10/22/optimize-verdaccio-proxy/)的做法，代理可以帮你分担 99% 以上的压力。
+如果只是想一定程度上提高处理高并发的性能，可以采取上一篇[代理分流](http://claude-ray.com/2019/10/22/optimize-verdaccio-proxy/)的做法，代理可以帮你分担 99% 以上的压力。
 
 如果想进一步提升性能，实现应用的平滑重启，本文单机 Cluster 并配合 pm2 reload 的做法不妨一试。
 

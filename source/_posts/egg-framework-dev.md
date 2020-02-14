@@ -149,7 +149,7 @@ Radix Tree 是一种基于前缀的查找算法，Golang 的 echo、gin 等 web 
 
 需求：elastic-apm hook 必须在 Egg 和 egg-router 被 require 前完成加载。
 
-之前有一篇更详细的文章《[elastic-apm-node 扩展篇 —— Egg](https://claude-ray.github.io/2019/07/12/elastic-apm-node-egg/)》，适用于 Egg 应用层的 APM 接入。而在框架层则简单许多，可以直接在框架入口文件做此处理，应用开发者无须再关心这个包的处理细节。
+之前有一篇更详细的文章《[elastic-apm-node 扩展篇 —— Egg](http://claude-ray.com/2019/07/12/elastic-apm-node-egg/)》，适用于 Egg 应用层的 APM 接入。而在框架层则简单许多，可以直接在框架入口文件做此处理，应用开发者无须再关心这个包的处理细节。
 
 ### ts 项目启动卡住
 
