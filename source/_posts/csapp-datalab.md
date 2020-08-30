@@ -63,6 +63,20 @@ int isTmax(int x) {
 
 上面已经知道怎么获取 TMIN，TMAX 可以用 ~TMIN 表示，因此主要考察两个数是否相等 —— `^`。
 
+### 错误更正
+
+> 感谢 [@nerrons](https://github.com/nerrons) 兄指正
+
+前面的解法忽略了操作符的限制，是不合题意的。故更换思路：由于 TMAX + 1 可得到 TMIN，若 x 为 TMAX，则 x + 1 + x 结果为 0。
+
+但直接这样写无法通过检测程序，是因为 0xffffffff 同样满足 x + 1 + x 为 0 的特性，需要将该情况排除。
+
+```c
+int isTmax(int x) {
+  return !(~((x + 1) + x) | !(x + 1));
+}
+```
+
 ## allOddBits
 
 ```c
