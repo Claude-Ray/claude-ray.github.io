@@ -1,0 +1,151 @@
+---
+title: 如何管理桌面窗口
+date: 2020-12-23 20:49:53
+tags: [MacOS,WindowManager,Workflow]
+categories: Essay
+---
+
+想向同事分享窗口切换的一点心得，不小心写成一篇没什么营养的方法论。虽然主要还是讲窗口切换。
+
+<!--more-->
+
+## 什么是窗口管理
+
+如果你不知道什么是窗口管理，在开启话题之前，不妨先来确认一下窗口管理器和桌面环境的概念。
+
+首先说桌面环境，翻译自 Desktop Environment，它负责为用户提供完整的操作界面，而不仅仅是狭义的“桌面部件”，还包括图标、窗口、工具栏、壁纸等等。
+
+再说窗口管理器，Window Manager，它是上述桌面环境的一部分，关乎图形化应用的窗口的基本操作，主要为如何进行排列和切换。窗口管理器是桌面环境的一部分，甚至可以完全独立于桌面环境，只运行窗口管理器，从而节省硬件资源。它包含以下类型：
+
+- Float 悬浮：不同窗口可以相互重叠，就像桌子上随意摆放的白纸一样（这里借用了 Archlinux Wiki 的比喻）。正是 MacOS 和 Windows 提供的模式。
+- Tiling 平铺：窗口不能重叠，而是像瓦片一样挨个摆放。
+- Dynamic 动态：兼顾上述两种模式，可以动态切换窗口放置方式。
+
+不同类型的窗口管理器提供了不同的窗口摆放方式，还提供了各自的窗口切换逻辑，其中“平铺”更倾向于使用键盘操作，如何选择，主要看个人口味。
+
+虽然着重介绍了窗口管理器，但它不是今天的主角，我们应该跳出所有的运行环境，去发现真正的“窗口管理器”其实是使用者自己。
+
+## 排列方式
+
+窗口排列是一个答案无足轻重选择题，需要结合显示器的使用习惯作答。如果仅从思路上讲，相比手动排列，自动排列无疑是更好的选择，此时平铺类窗口管理器的优势就体现出来了。
+
+然而，Linux 可以非常轻松地调换窗口管理器，在 MacOS 下可供的选择就不多了。[yabai](https://github.com/koekeishiya/yabai) 要求关闭 SIP，提高了安全风险，[Amethyst](https://github.com/ianyh/Amethyst) 功能较弱，好在轻量可控。如果放弃一点点平铺的功能性，可以选择 moom 这类辅助布局软件。考虑到本文不是工具推荐，也就不再介绍更多。
+
+对使用小屏幕和习惯全屏的用户而言，绝大多数的使用场景是全屏，则没必要安装辅助工具。
+
+## 切换方式
+
+### 操作背景
+
+按以下特征对号入座，目的是想让大家思考不同使用习惯之间的异同点。现在你的窗口管理习惯，是否适用于其他的用户呢？
+
+窗口模式：
+
+-   全屏化
+-   窗口化
+-   最小化（隐藏）
+
+桌面分布：
+
+-   单显示器-单桌面：将所有开启的窗口放在同一个桌面下，不采用任何虚拟桌面。
+-   单显示器-多桌面：（按照习惯）将不同的软件放在不同的虚拟桌面下。
+-   多显示器-单桌面：和多桌面类似，但不采用虚拟桌面，每台显示器就是一个桌面。
+-   多显示器-多桌面：各台显示器放置了不同的虚拟桌面，互相隔离。
+
+### 操作习惯
+
+1. 鼠标/触摸板
+2. 全局快捷键（系统默认）
+  - MacOS 可以使用 command+tab 和 command+\` 切换，Linux、Windows 有 alt+tab
+  - MacOS 可以使用 control+↑ 和手势操作，Linux、Windows 有 win、win+tab
+3. 启动器：例如 MacOS 的 Spotlight、Alfred，Windows 的 Everything，Linux 的 rofi、dmenu 等等
+4. 全局快捷键（自定义）
+
+它们的区别：
+
+1. 寻找(思考) -&gt; 移动(思考+操作) -&gt; 确认(操作)
+2. 寻找(操作+思考) -&gt; 确认(操作)
+3. 寻找(思考+肌肉记忆) -&gt; 确认(操作)
+4. 确认(思考+肌肉记忆)
+
+> 肌肉记忆≈闭眼操作
+
+虽然存在很大的误差，但不难发现，桌面越复杂，操作复杂度的差距就越明显。
+
+## 如何自定义快捷键
+
+两个代表性工具，MacOS Hammerspoon，Linux wmctrl。同事 MacOS 开发较多，因此以 Hammerspoon 为例。
+
+``` lua
+hs.hotkey.bind(hyper, "C", function()
+    hs.application.launchOrFocus("/Applications/Google Chrome.app")
+end)
+
+hs.hotkey.bind(hyper, "Return", function()
+    hs.application.launchOrFocus("/Applications/Alacritty.app")
+end)
+
+hs.hotkey.bind(hyper, "W", function()
+    hs.application.launchOrFocus("/Applications/WeChat.app")
+end)
+```
+
+## 如何设置更多快捷键
+
+全局快捷键极易引起冲突，譬如某狗输入法（别用）。为了避免这种烦恼，我们可以在 Hammerspoon 设置组合键。
+
+``` lua
+local hyper = {"cmd", "alt", "ctrl"}
+```
+
+可惜，并不是所有人的手都能成长为“八爪鱼”，腱鞘炎了解一下？我们尽可能把多个按键合并，同时注意减少小拇指的使用。
+
+以 MacOS 为例，使用 Karabiner-Elements，将大拇指附近不需要的按键设置为 hyper，配置示例如下
+
+``` json
+{
+  "title": "Change option key",
+  "rules": [
+    {
+      "description": "Change right_option to left_option + left_control + left_command if pressed with other keys, to escape if pressed alone.",
+      "manipulators": [
+        {
+          "type": "basic",
+          "from": {
+            "key_code": "right_option",
+            "modifiers": {
+              "optional": [
+                "any"
+              ]
+            }
+          },
+          "to": [
+            {
+              "key_code": "left_option",
+              "modifiers": [
+                "left_control",
+                "left_command"
+              ]
+            }
+          ],
+          "to_if_alone": [
+            {
+              "key_code": "escape"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
+```
+
+按住右 option，等于同时按住了 option+control+command，还可以随手实现轻按一下等于 ESC 的效果。
+
+别忘了，组合键可不止这三个，还可以再从键盘上选几个键，设为 option+control+command+shift 等等，从此再也不用担心自定义的键位不够用了。
+
+## 结语
+
+排列窗口的方式很大程度取决于个人口味，自由度也非常高。窗口切换的操作具备更强的逻辑性，需要付出一定的成本。两者都可以提高工作效益，值得思考改进。但也必须承认，改进 Workflow 的边际效应明显，希望读完这篇文章的你，宁可什么都不做，也不要反复抉择。
+
+最后，分享一下我目前的 MBP 使用习惯吧：极端的全屏使用者，彻底禁用 Dock，隐藏 Menu Bar，将通知和时间放在了 Touch Bar，每天享受沉浸式的屏幕体验。
