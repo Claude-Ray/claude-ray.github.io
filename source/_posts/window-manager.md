@@ -9,6 +9,9 @@ categories: Essay
 
 <!--more-->
 
+![publish](/image/window-manager/loop.gif)
+> 图片未加速
+
 ## 什么是窗口管理
 
 如果你不知道什么是窗口管理，在开启话题之前，不妨先来确认一下窗口管理器和桌面环境的概念。
@@ -77,18 +80,50 @@ categories: Essay
 两个代表性工具，MacOS Hammerspoon，Linux wmctrl。同事 MacOS 开发较多，因此以 Hammerspoon 为例。
 
 ``` lua
+local hyper = {"cmd", "shift"}
+
+-- 示例：打开或切换到浏览器
 hs.hotkey.bind(hyper, "C", function()
-    hs.application.launchOrFocus("/Applications/Google Chrome.app")
+  hs.application.launchOrFocus("/Applications/Google Chrome.app")
 end)
 
+-- 示例：打开或切换到终端
 hs.hotkey.bind(hyper, "Return", function()
-    hs.application.launchOrFocus("/Applications/Alacritty.app")
-end)
-
-hs.hotkey.bind(hyper, "W", function()
-    hs.application.launchOrFocus("/Applications/WeChat.app")
+  hs.application.launchOrFocus("/Applications/Alacritty.app")
 end)
 ```
+
+假如一个应用开启了多个窗口，也可以通过窗口标题、序号进行精准切换。
+
+``` lua
+--- 根据标题切换应用窗口
+-- @param appTitle 系统 menu bar 左上角的标题
+-- @param appName 安装目录的名称或绝对路径
+-- @param winTitle 模糊匹配项目名，注意 .()[]+- 等字符需要转义
+function launchOrFocusWindow(appTitle, appName, winTitle)
+  return function()
+    local app = hs.application(appTitle)
+    if app == nil then
+      hs.application.open(appName)
+    else
+      local windows = app:allWindows()
+      for _, win in pairs(windows) do
+        local found = string.match(win:title(), winTitle)
+        if found ~= nil then
+          win:focus()
+          return
+        end
+      end
+      app:activate()
+    end
+  end
+end
+
+-- 示例：VSCode 多开窗口的切换，给名为 "my-project" 的项目定制快捷键
+hs.hotkey.bind(hyper, "1", launchOrFocusWindow("Code", "Visual Studio Code", "my%-project"))
+```
+
+利用丰富的 [API](https://www.hammerspoon.org/docs)，你还可以设计更多复杂的功能。
 
 ## 如何设置更多快捷键
 
