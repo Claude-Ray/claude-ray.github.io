@@ -123,6 +123,9 @@ end
 hs.hotkey.bind(hyper, "1", launchOrFocusWindow("Code", "Visual Studio Code", "my%-project"))
 ```
 
+> launchOrFocusWindow 参数有些奇葩，因为 hs.application.get 和 hs.application.open 分别需要 title、path，互不兼容（可能是 bug）。
+> 不过 get 和 open 还同时支持 bundleID，我认为名称对普通用户更友好，但如果你知道怎么获取 bundleID，自然可以用它来统一此处的入参。
+
 利用丰富的 [API](https://www.hammerspoon.org/docs)，你还可以设计更多复杂的功能。
 
 ## 如何设置更多快捷键
