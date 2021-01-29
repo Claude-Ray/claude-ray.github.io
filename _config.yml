@@ -76,7 +76,7 @@ theme: next
 deploy:
   type: git
   repository: https://github.com/Claude-Ray/claude-ray.github.io.git
-  branch: master
+  branch: gh-pages
 
 sitemap:
   path: sitemap.xml
