@@ -23,14 +23,14 @@
     var CONFIG = {"hostname":"claude-ray.com","root":"/","scheme":"Mist","version":"7.7.1","exturl":false,"sidebar":{"position":"right","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
   </script>
 
-  <meta name="description" content="想想项目创建之后，多久没给 npm 依赖升级了？ 如何得知当前项目 npm 依赖的”健康度”？ 给老项目升级 npm 依赖，有哪些注意事项？">
+  <meta name="description" content="想想项目创建之后，多久没给 npm 依赖升级了？ 如何得知当前项目 npm 依赖的“健康度”？ 给老项目升级 npm 依赖，有哪些注意事项？">
 <meta property="og:type" content="article">
 <meta property="og:title" content="浅谈 npm 依赖治理">
 <meta property="og:url" content="http://claude-ray.com/2022/06/28/auditing_npm_packages/index.html">
 <meta property="og:site_name" content="Claude&#39;s Blog">
-<meta property="og:description" content="想想项目创建之后，多久没给 npm 依赖升级了？ 如何得知当前项目 npm 依赖的”健康度”？ 给老项目升级 npm 依赖，有哪些注意事项？">
+<meta property="og:description" content="想想项目创建之后，多久没给 npm 依赖升级了？ 如何得知当前项目 npm 依赖的“健康度”？ 给老项目升级 npm 依赖，有哪些注意事项？">
 <meta property="article:published_time" content="2022-06-28T04:16:30.000Z">
-<meta property="article:modified_time" content="2022-06-29T04:36:29.781Z">
+<meta property="article:modified_time" content="2022-06-29T04:40:50.102Z">
 <meta property="article:author" content="Claude Ray">
 <meta property="article:tag" content="Node.js">
 <meta property="article:tag" content="npm">
@@ -243,7 +243,7 @@
 
       
         <p>想想项目创建之后，多久没给 npm 依赖升级了？</p>
-<p>如何得知当前项目 npm 依赖的”健康度”？</p>
+<p>如何得知当前项目 npm 依赖的“健康度”？</p>
 <p>给老项目升级 npm 依赖，有哪些注意事项？</p>
 <a id="more"></a>
 
@@ -320,9 +320,9 @@
 </ul>
 <p>第二点还需要做个补充说明，由于静态项目的构建环境往往需要安装大部分 devDependencies 中的依赖，一般只有放在服务端运行的 Node.js 项目才需要考虑这么做。但随着 TypeScript 的普及或是 SSR 的引入，这些服务端项目在运行前也需要执行构建。那还有什么用？别忘了，还有一个 <code>npm prune --production</code> 能用作后置的项目体积优化。</p>
 <p>当然了，语义划分带来帮助也足够大了，例如根据依赖关系来优化 npm 治理的优先级和策略。</p>
-<p>顺便再提一句，dependencies 和 devDependencies 不是用来区分重要程度，请不要把运行可有可无的依赖放在 devDependencies，应该放在 <a href="https://docs.npmjs.com/cli/v6/configuring-npm/package-json#optionaldependencies" target="_blank" rel="noopener">optionaldependencies</a> 中。</p>
+<p>顺便再提一句，dependencies 和 devDependencies 不是用来区分重要程度，请不要把运行可有可无的依赖放在 devDependencies，应该放在 <a href="https://docs.npmjs.com/cli/v6/configuring-npm/package-json#optionaldependencies" target="_blank" rel="noopener">optionalDependencies</a> 中。</p>
 <h2 id="结语"><a href="#结语" class="headerlink" title="结语"></a>结语</h2><p>以上介绍的经验多为概述，主要结合 npm 依赖管理工具的特点，没能介绍 yarn 和 pnpm 等工具独有的 API 和问题，如果读者想了解更多内容，请查阅相关文档。此外，同时使用多种依赖管理工具的项目颇为复杂，比较少见，本文未作分析，也不建议读者朋友们尝试。而在软件工程领域，依赖治理还有很多要点需要我们去进一步实践，不过内容更侧重于 refactor。</p>
-<p>回到标语所提项目依赖的”健康度”，实为笔者胡诌，用来形容依赖关系的混乱程度。不做这些依赖治理，也没有太大关系，因为软件的生命周期往往坚持不到依赖关系崩坏的那天。但混乱的依赖管理，却能轻易促成代码的腐化。</p>
+<p>回到标语所提项目依赖的“健康度”，实为笔者胡诌，用来形容依赖关系的混乱程度。不做这些依赖治理，也没有太大关系，因为软件的生命周期往往坚持不到依赖关系崩坏的那天。但混乱的依赖管理，却能轻易促成代码的腐化。</p>
 
     </div>
 
