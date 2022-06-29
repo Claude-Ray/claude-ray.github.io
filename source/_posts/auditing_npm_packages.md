@@ -59,7 +59,7 @@ webpack                              3.12.0   3.12.0        5.73.0  project-dir
 
 ### 风险依赖 npm audit
 
-`npm audit` 命令同样是向 npm 源发起请求，它将 package-lock.json 作为参数，返回存在已知漏洞的依赖列表。 换句话说，audit 不需要安装 node~modules~ 就可以执行，其结果完全取决于当前的 package-lock.json。
+`npm audit` 命令同样是向 npm 源发起请求，它将 package-lock.json 作为参数，返回存在已知漏洞的依赖列表。 换句话说，audit 不需要安装 node_modules 就可以执行，其结果完全取决于当前的 package-lock.json。
 
 返回节选如下：
 
@@ -153,7 +153,7 @@ changelog 一般位于代码仓库的 `CHANGELOG.md` 或 `History.md`，随意�
 package-lock.json 的设计文稿就直言推荐把 lock 文件加入代码仓库：
 
 - 保证团队成员和 CI 能使用完全相同的依赖关系
-- 作为 node~modules~ 的轻量化备份
+- 作为 node_modules 的轻量化备份
 - 让依赖树的变化更具可见性
 - 加速安装过程
 
@@ -187,7 +187,7 @@ package.json 中 `dependencies` 和 `devDependencies` 的区别就不必介绍�
 不过，即使对项目而言，devDependencies 也有积极意义：
 
 - 能从语义上划分依赖的用途
-- 使用 `npm install --production` 可以忽略 devDependencies，提高安装效率，显著减少 node~modules~ 的体积
+- 使用 `npm install --production` 可以忽略 devDependencies，提高安装效率，显著减少 node_modules 的体积
 
 第二点还需要做个补充说明，由于静态项目的构建环境往往需要安装大部分 devDependencies 中的依赖，一般只有放在服务端运行的 Node.js 项目才需要考虑这么做。但随着 TypeScript 的普及或是 SSR 的引入，这些服务端项目在运行前也需要执行构建。那还有什么用？别忘了，还有一个 `npm prune --production` 能用作后置的项目体积优化。
 
