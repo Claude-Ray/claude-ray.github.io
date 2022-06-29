@@ -30,7 +30,7 @@
 <meta property="og:site_name" content="Claude&#39;s Blog">
 <meta property="og:description" content="想想项目创建之后，多久没给 npm 依赖升级了？ 如何得知当前项目 npm 依赖的”健康度”？ 给老项目升级 npm 依赖，有哪些注意事项？">
 <meta property="article:published_time" content="2022-06-28T04:16:30.000Z">
-<meta property="article:modified_time" content="2022-06-29T04:16:48.490Z">
+<meta property="article:modified_time" content="2022-06-29T04:36:29.781Z">
 <meta property="article:author" content="Claude Ray">
 <meta property="article:tag" content="Node.js">
 <meta property="article:tag" content="npm">
@@ -269,7 +269,7 @@
 
 <p>默认只会检查项目 package.json 中直接引用的依赖， <code>--all</code> 选项可以用来匹配全部的依赖。但没有必要，真要彻底升级，更推荐尝试重建 lock 文件。</p>
 <p>对于 outdated 的包，使用 <code>npm update</code> 或其他包管理工具对应的 update 命令即可安装 SemVer 标准执行升级。如果想跨越 Major 版本，则需要手动指定升级版本。</p>
-<h3 id="风险依赖-npm-audit"><a href="#风险依赖-npm-audit" class="headerlink" title="风险依赖 npm audit"></a>风险依赖 npm audit</h3><p><code>npm audit</code> 命令同样是向 npm 源发起请求，它将 package-lock.json 作为参数，返回存在已知漏洞的依赖列表。 换句话说，audit 不需要安装 node<del>modules</del> 就可以执行，其结果完全取决于当前的 package-lock.json。</p>
+<h3 id="风险依赖-npm-audit"><a href="#风险依赖-npm-audit" class="headerlink" title="风险依赖 npm audit"></a>风险依赖 npm audit</h3><p><code>npm audit</code> 命令同样是向 npm 源发起请求，它将 package-lock.json 作为参数，返回存在已知漏洞的依赖列表。 换句话说，audit 不需要安装 node_modules 就可以执行，其结果完全取决于当前的 package-lock.json。</p>
 <p>返回节选如下：</p>
 <figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># Run  npm install swiper@8.2.5  to resolve 1 vulnerability</span></span><br><span class="line">SEMVER WARNING: Recommended action is a potentially breaking change</span><br><span class="line">┌───────────────┬──────────────────────────────────────────────────────────────┐</span><br><span class="line">│ Critical      │ Prototype Pollution <span class="keyword">in</span> swiper                                │</span><br><span class="line">├───────────────┼──────────────────────────────────────────────────────────────┤</span><br><span class="line">│ Package       │ swiper                                                       │</span><br><span class="line">├───────────────┼──────────────────────────────────────────────────────────────┤</span><br><span class="line">│ Dependency of │ swiper                                                       │</span><br><span class="line">├───────────────┼──────────────────────────────────────────────────────────────┤</span><br><span class="line">│ Path          │ swiper                                                       │</span><br><span class="line">├───────────────┼──────────────────────────────────────────────────────────────┤</span><br><span class="line">│ More info     │ https://github.com/advisories/GHSA-p3hc-fv2j-rp68            │</span><br><span class="line">└───────────────┴──────────────────────────────────────────────────────────────┘</span><br><span class="line">found 125 vulnerabilities (8 low, 66 moderate, 41 high, 10 critical) <span class="keyword">in</span> 2502 scanned packages</span><br><span class="line">  run `npm audit fix` to fix 15 of them.</span><br><span class="line">  96 vulnerabilities require semver-major dependency updates.</span><br><span class="line">  14 vulnerabilities require manual review. See the full report <span class="keyword">for</span> details.</span><br></pre></td></tr></table></figure>
 
@@ -298,7 +298,7 @@
 <p>package-lock.json 的设计文稿就直言推荐把 lock 文件加入代码仓库：</p>
 <ul>
 <li>保证团队成员和 CI 能使用完全相同的依赖关系</li>
-<li>作为 node<del>modules</del> 的轻量化备份</li>
+<li>作为 node_modules 的轻量化备份</li>
 <li>让依赖树的变化更具可见性</li>
 <li>加速安装过程</li>
 </ul>
@@ -316,7 +316,7 @@
 <p>不过，即使对项目而言，devDependencies 也有积极意义：</p>
 <ul>
 <li>能从语义上划分依赖的用途</li>
-<li>使用 <code>npm install --production</code> 可以忽略 devDependencies，提高安装效率，显著减少 node<del>modules</del> 的体积</li>
+<li>使用 <code>npm install --production</code> 可以忽略 devDependencies，提高安装效率，显著减少 node_modules 的体积</li>
 </ul>
 <p>第二点还需要做个补充说明，由于静态项目的构建环境往往需要安装大部分 devDependencies 中的依赖，一般只有放在服务端运行的 Node.js 项目才需要考虑这么做。但随着 TypeScript 的普及或是 SSR 的引入，这些服务端项目在运行前也需要执行构建。那还有什么用？别忘了，还有一个 <code>npm prune --production</code> 能用作后置的项目体积优化。</p>
 <p>当然了，语义划分带来帮助也足够大了，例如根据依赖关系来优化 npm 治理的优先级和策略。</p>
