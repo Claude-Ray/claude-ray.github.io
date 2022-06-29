@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.2.1">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/favicon.ico">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon.ico">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon.ico">
+  <link rel="mask-icon" href="/images/favicon.ico" color="#222">
+  <meta name="google-site-verification" content="2NvRwEicYYEjnSCQZmthUW33BtS11QwT85AgvfocMGI">
+  <meta name="msvalidate.01" content="0BFF64D8466DDA1B96AF8DBA4B5ED7EC">
+  <meta name="baidu-site-verification" content="13oCuH1wUm">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"claude-ray.com","root":"/","scheme":"Mist","version":"7.7.1","exturl":false,"sidebar":{"position":"right","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="Smooth Weighted Round-Robin (SWRR) 是 nginx 默认的加权负载均衡算法，它的重要特点是平滑，避免低权重的节点长时间处于空闲状态，因此被称为平滑加权轮询。  该算法来自 nginx 的一次 commit：Upstream: smooth weighted round-robin balancing  在阅读之前，你应该已经了解过 nginx 的几种负载均衡算法，">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Nginx SWRR 算法解读">
+<meta property="og:url" content="http://claude-ray.com/2019/08/10/nginx-swrr/index.html">
+<meta property="og:site_name" content="Claude&#39;s Blog">
+<meta property="og:description" content="Smooth Weighted Round-Robin (SWRR) 是 nginx 默认的加权负载均衡算法，它的重要特点是平滑，避免低权重的节点长时间处于空闲状态，因此被称为平滑加权轮询。  该算法来自 nginx 的一次 commit：Upstream: smooth weighted round-robin balancing  在阅读之前，你应该已经了解过 nginx 的几种负载均衡算法，">
+<meta property="article:published_time" content="2019-08-10T05:13:49.000Z">
+<meta property="article:modified_time" content="2022-06-29T03:16:56.060Z">
+<meta property="article:author" content="Claude Ray">
+<meta property="article:tag" content="Nginx">
+<meta property="article:tag" content="load balance">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://claude-ray.com/2019/08/10/nginx-swrr/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true
+  };
+</script>
+
+  <title>Nginx SWRR 算法解读 | Claude's Blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+<link rel="alternate" href="/atom.xml" title="Claude's Blog" type="application/atom+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Claude's Blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+        <h1 class="site-subtitle" itemprop="description">Searching</h1>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-fw fa-user"></i>About</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>Tags</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-fw fa-th"></i>Categories</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>Archives</a>
+
+  </li>
+  </ul>
+
+</nav>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content">
+            
+
+  <div class="posts-expand">
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="zh-Hans">
+    <link itemprop="mainEntityOfPage" href="http://claude-ray.com/2019/08/10/nginx-swrr/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.jpg">
+      <meta itemprop="name" content="Claude Ray">
+      <meta itemprop="description" content="Now or Never">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Claude's Blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          Nginx SWRR 算法解读
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2019-08-10 13:13:49" itemprop="dateCreated datePublished" datetime="2019-08-10T13:13:49+08:00">2019-08-10</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Nginx/" itemprop="url" rel="index">
+                    <span itemprop="name">Nginx</span>
+                  </a>
+                </span>
+            </span>
+
+          
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="fa fa-comment-o"></i>
+      </span>
+      <span class="post-meta-item-text">Disqus: </span>
+    
+    <a title="disqus" href="/2019/08/10/nginx-swrr/#disqus_thread" itemprop="discussionUrl">
+      <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2019/08/10/nginx-swrr/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  <br>
+  <span class="post-meta-item" title="Symbols count in article">
+    <span class="post-meta-item-icon">
+      <i class="fa fa-file-word-o"></i>
+    </span>
+      <span class="post-meta-item-text">Symbols count in article: </span>
+    <span>1k</span>
+  </span>
+  <span class="post-meta-item" title="Reading time">
+    <span class="post-meta-item-icon">
+      <i class="fa fa-clock-o"></i>
+    </span>
+      <span class="post-meta-item-text">Reading time &asymp;</span>
+    <span>4 mins.</span>
+  </span>
+
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>Smooth Weighted Round-Robin (SWRR) 是 nginx 默认的加权负载均衡算法，它的重要特点是平滑，避免低权重的节点长时间处于空闲状态，因此被称为平滑加权轮询。</p>
+<blockquote>
+<p>该算法来自 nginx 的一次 commit：<a href="https://github.com/nginx/nginx/commit/52327e0627f49dbda1e8db695e63a4b0af4448b1" target="_blank" rel="noopener">Upstream: smooth weighted round-robin balancing</a></p>
+</blockquote>
+<p>在阅读之前，你应该已经了解过 nginx 的几种负载均衡算法，并阅读了 SWRR 的实现。</p>
+<p>介绍此算法的文章有很多，但用数学角度给出证明过程的较少，尽管并不复杂。这里把自己的思路分享一下，为了便于理解，只考虑算法核心的 current_weight，忽略受异常波动影响的 effective_weight。</p>
+<a id="more"></a>
+
+<h2 id="更新说明"><a href="#更新说明" class="headerlink" title="更新说明"></a>更新说明</h2><p>在写下博客之前，我还没有翻到其他靠谱的证明过程，就草草记录了自己粗鄙的思路。可发布文章一年之后，再来回顾的我不禁汗颜，为了照顾读者（更未来的自己），参考 <a href="https://tenfy.cn/2018/11/12/smooth-weighted-round-robin/" target="_blank" rel="noopener">nginx平滑的基于权重轮询算法分析</a> 重新梳理了文章脉络。</p>
+<p>以至于现在的内容更像是他人博客的学习笔记，和初版大不相同。这让患有原创洁癖的我深感羞愧，之后的自己务必用更数学的风格去做解析。</p>
+<h2 id="算法描述"><a href="#算法描述" class="headerlink" title="算法描述"></a>算法描述</h2><p>由于所有节点都有原始权重和当前权重，为了方便区分，我们称当前权重为“状态”。</p>
+<p>节点的初始状态均为 0，每开始一轮新的选择，先为各个节点加上其原始权重大小的值，然后选出权重最大的节点，将其值减去所有节点的权重和，最后，该节点作为命中节点返回。</p>
+<p>接下来是官方的示例，对于权重占比 { 5, 1, 1 } 的 A, B, C 三个节点，每轮节点的选择和状态的变换如下</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line">| Round |  A |  B |  C | Selected Node |</span><br><span class="line">|-------|----|----|----|---------------|</span><br><span class="line">|       |  0 |  0 |  0 |               |</span><br><span class="line">|-------|----|----|----|---------------|</span><br><span class="line">|     1 |  5 |  1 |  1 | A             |</span><br><span class="line">|       | -2 |  1 |  1 |               |</span><br><span class="line">|-------|----|----|----|---------------|</span><br><span class="line">|     2 |  3 |  2 |  2 | A             |</span><br><span class="line">|       | -4 |  2 |  2 |               |</span><br><span class="line">|-------|----|----|----|---------------|</span><br><span class="line">|     3 |  1 |  3 |  3 | B             |</span><br><span class="line">|       |  1 | -4 |  3 |               |</span><br><span class="line">|-------|----|----|----|---------------|</span><br><span class="line">|     4 |  6 | -3 |  4 | A             |</span><br><span class="line">|       | -1 | -3 |  4 |               |</span><br><span class="line">|-------|----|----|----|---------------|</span><br><span class="line">|     5 |  4 | -2 |  5 | C             |</span><br><span class="line">|       |  4 | -2 | -2 |               |</span><br><span class="line">|-------|----|----|----|---------------|</span><br><span class="line">|     6 |  9 | -1 | -1 | A             |</span><br><span class="line">|       |  2 | -1 | -1 |               |</span><br><span class="line">|-------|----|----|----|---------------|</span><br><span class="line">|     7 |  7 |  0 |  0 | A             |</span><br><span class="line">|       |  0 |  0 |  0 |               |</span><br></pre></td></tr></table></figure>
+
+<h2 id="证明思路"><a href="#证明思路" class="headerlink" title="证明思路"></a>证明思路</h2><p>假设有三个服务器节点 A B C，它们的权重分别为 a、b、c 并保持不变，W 表示所有服务器节点权重的总和，即 W = a + b + c。</p>
+<p>根据 SWRR 算法，每台服务器的初始权重均为 0。</p>
+<table>
+<thead>
+<tr>
+<th>A</th>
+<th>B</th>
+<th>C</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+</tr>
+</tbody></table>
+<p>也可以用等式表达当前的权重（状态）之和</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Sum &#x3D; 0 + 0 + 0 &#x3D; 0</span><br></pre></td></tr></table></figure>
+
+<p>每次开始选择，各节点的状态会增加对应权重的大小。从中选择 CW 最大的节点，并将其值减去 W。</p>
+<p>首先，所有节点加权，不妨设 A 为权重最大的节点，经过第一轮变换之后</p>
+<table>
+<thead>
+<tr>
+<th>A</th>
+<th>B</th>
+<th>C</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>a - W</td>
+<td>b</td>
+<td>c</td>
+</tr>
+</tbody></table>
+<p>此时，节点的状态和仍然为 0</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">Sum &#x3D; (a - W) + b + c</span><br><span class="line">    &#x3D; (a - a - b - c) + b + c</span><br><span class="line">    &#x3D; 0</span><br></pre></td></tr></table></figure>
+
+<p>综上，每一轮选择都是将总资源根据权重分配给各自节，再由权重最大的节点一次性消耗掉。依此类推，无论第几次选择，他们的和恒等于零。</p>
+<hr>
+<p>假设 A 已经被选择了 a 轮 (a &lt; W)，即将开始第 n 轮选择（a &lt; n &lt; W），那么 A 节点的状态为</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">n * a - a * W &#x3D; a * (n - W) &lt; 0</span><br></pre></td></tr></table></figure>
+
+<p>由于状态总和恒为 0，而 A 节点状态小于 0 的时候一定不会被选中，因此 A 最多只能被选择 a 轮。同理，其他每个节点也最多只能被选择等同于节点权重的次数。</p>
+<hr>
+<p>最后证明算法的平滑性，即 A 节点不会连续被选择 a 次。</p>
+<p>不妨设 A 节点已经被连续选择了 a - 1 次，那么当前 A 节点的状态为</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">(a - 1) * a - (a - 1) * W &#x3D; (a - 1) * (a - W) &lt; 0</span><br></pre></td></tr></table></figure>
+
+<p>同上一条证明，由于状态总和恒为 0，而 A 节点状态小于 0 的时候一定不会被选中，因此 A 最多只能被连续选中 a - 1 轮。即每个节点也不会被连续选择，平滑性得证。</p>
+
+    </div>
+
+    
+    
+    
+        
+
+<div>
+<ul class="post-copyright">
+  <li class="post-copyright-author">
+    <strong>Post author:  </strong>Claude Ray
+  </li>
+  <li class="post-copyright-link">
+    <strong>Post link: </strong>
+    <a href="http://claude-ray.com/2019/08/10/nginx-swrr/" title="Nginx SWRR 算法解读">http://claude-ray.com/2019/08/10/nginx-swrr/</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>Copyright Notice:  </strong>All articles in this blog are licensed under <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" rel="noopener" target="_blank"><i class="fa fa-fw fa-creative-commons"></i>BY-NC-SA</a> unless stating additionally.
+  </li>
+</ul>
+</div>
+
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/Nginx/" rel="tag"># Nginx</a>
+              <a href="/tags/load-balance/" rel="tag"># load balance</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2019/08/08/node-process-hang-up/" rel="prev" title="记一次 Node.js 进程挂起的 BUG 追踪">
+      <i class="fa fa-chevron-left"></i> 记一次 Node.js 进程挂起的 BUG 追踪
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2019/08/24/remove-easyconnect-daemons-on-mac/" rel="next" title="Mac 上移除 EasyConnect 常驻后台进程">
+      Mac 上移除 EasyConnect 常驻后台进程 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+  </div>
+
+
+          </div>
+          
+    
+  <div class="comments">
+    <div id="disqus_thread">
+      <noscript>Please enable JavaScript to view the comments powered by Disqus.</noscript>
+    </div>
+  </div>
+  
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let activeClass = CONFIG.comments.activeClass;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#更新说明"><span class="nav-number">1.</span> <span class="nav-text">更新说明</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#算法描述"><span class="nav-number">2.</span> <span class="nav-text">算法描述</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#证明思路"><span class="nav-number">3.</span> <span class="nav-text">证明思路</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Claude Ray"
+      src="/images/avatar.jpg">
+  <p class="site-author-name" itemprop="name">Claude Ray</p>
+  <div class="site-description" itemprop="description">Now or Never</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">54</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">13</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">63</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/Claude-Ray" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;Claude-Ray" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://twitter.com/Claude__Ray" title="Twitter → https:&#x2F;&#x2F;twitter.com&#x2F;Claude__Ray" rel="noopener" target="_blank"><i class="fa fa-fw fa-twitter"></i>Twitter</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://steamcommunity.com/profiles/76561198202113170" title="Steam → https:&#x2F;&#x2F;steamcommunity.com&#x2F;profiles&#x2F;76561198202113170" rel="noopener" target="_blank"><i class="fa fa-fw fa-steam"></i>Steam</a>
+      </span>
+  </div>
+
+
+  <div class="links-of-blogroll motion-element">
+    <div class="links-of-blogroll-title">
+      <i class="fa fa-fw fa-link"></i>
+      Links
+    </div>
+    <ul class="links-of-blogroll-list">
+        <li class="links-of-blogroll-item">
+          <a href="https://github.com/nebulae-pan" title="https:&#x2F;&#x2F;github.com&#x2F;nebulae-pan" rel="noopener" target="_blank">Nebulae Pan</a>
+        </li>
+    </ul>
+  </div>
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+<div class="copyright">
+  
+  &copy; 2017 – 
+  <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-bolt"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Claude Ray</span>
+</div><div class="copyright">
+
+  <span class="post-meta-divider">|</span>
+  <span class="post-meta-item-icon">
+    <i class="fa fa-area-chart"></i>
+  </span>
+  <span class="post-meta-item-text">Symbols count total: </span>
+  <span title="Symbols count total">63.2k</span>
+
+</div>
+
+<div>
+  Welcome To My <a href="https://github.com/Claude-Ray/claude-ray.github.io" target="_blank" rel="noopener">Homepage</a>. Happy hacking!
+</div>
+
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+  <script>
+    (function(){
+      var bp = document.createElement('script');
+      var curProtocol = window.location.protocol.split(':')[0];
+      bp.src = (curProtocol === 'https') ? 'https://zz.bdstatic.com/linksubmit/push.js' : 'http://push.zhanzhang.baidu.com/push.js';
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(bp, s);
+    })();
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script>
+  function loadCount() {
+    var d = document, s = d.createElement('script');
+    s.src = 'https://claude-ray.disqus.com/count.js';
+    s.id = 'dsq-count-scr';
+    (d.head || d.body).appendChild(s);
+  }
+  // defer loading until the whole page loading is completed
+  window.addEventListener('load', loadCount, false);
+</script>
+<script>
+  var disqus_config = function() {
+    this.page.url = "http://claude-ray.com/2019/08/10/nginx-swrr/";
+    this.page.identifier = "2019/08/10/nginx-swrr/";
+    this.page.title = "Nginx SWRR 算法解读";
+    };
+  NexT.utils.loadComments(document.querySelector('#disqus_thread'), () => {
+    if (window.DISQUS) {
+      DISQUS.reset({
+        reload: true,
+        config: disqus_config
+      });
+    } else {
+      var d = document, s = d.createElement('script');
+      s.src = 'https://claude-ray.disqus.com/embed.js';
+      s.setAttribute('data-timestamp', '' + +new Date());
+      (d.head || d.body).appendChild(s);
+    }
+  });
+</script>
+
+</body>
+</html>

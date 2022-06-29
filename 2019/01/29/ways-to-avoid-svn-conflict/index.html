@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.2.1">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/favicon.ico">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon.ico">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon.ico">
+  <link rel="mask-icon" href="/images/favicon.ico" color="#222">
+  <meta name="google-site-verification" content="2NvRwEicYYEjnSCQZmthUW33BtS11QwT85AgvfocMGI">
+  <meta name="msvalidate.01" content="0BFF64D8466DDA1B96AF8DBA4B5ED7EC">
+  <meta name="baidu-site-verification" content="13oCuH1wUm">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"claude-ray.com","root":"/","scheme":"Mist","version":"7.7.1","exturl":false,"sidebar":{"position":"right","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="svn 给笔者的一大印象就是非常容易产生冲突，特别是项目加入新人后，由于初期没有强硬地制定规范，导致后期合并代码时灾难连天。决定在此分享这些“亡羊补牢”的规则，也算是避免 svn 产生合并冲突的一点经验。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="如何避免svn合并冲突">
+<meta property="og:url" content="http://claude-ray.com/2019/01/29/ways-to-avoid-svn-conflict/index.html">
+<meta property="og:site_name" content="Claude&#39;s Blog">
+<meta property="og:description" content="svn 给笔者的一大印象就是非常容易产生冲突，特别是项目加入新人后，由于初期没有强硬地制定规范，导致后期合并代码时灾难连天。决定在此分享这些“亡羊补牢”的规则，也算是避免 svn 产生合并冲突的一点经验。">
+<meta property="article:published_time" content="2019-01-29T14:13:36.000Z">
+<meta property="article:modified_time" content="2022-06-29T03:16:56.060Z">
+<meta property="article:author" content="Claude Ray">
+<meta property="article:tag" content="SVN">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://claude-ray.com/2019/01/29/ways-to-avoid-svn-conflict/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true
+  };
+</script>
+
+  <title>如何避免svn合并冲突 | Claude's Blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+<link rel="alternate" href="/atom.xml" title="Claude's Blog" type="application/atom+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Claude's Blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+        <h1 class="site-subtitle" itemprop="description">Searching</h1>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-fw fa-user"></i>About</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>Tags</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-fw fa-th"></i>Categories</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>Archives</a>
+
+  </li>
+  </ul>
+
+</nav>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content">
+            
+
+  <div class="posts-expand">
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="zh-Hans">
+    <link itemprop="mainEntityOfPage" href="http://claude-ray.com/2019/01/29/ways-to-avoid-svn-conflict/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.jpg">
+      <meta itemprop="name" content="Claude Ray">
+      <meta itemprop="description" content="Now or Never">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Claude's Blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          如何避免svn合并冲突
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2019-01-29 22:13:36" itemprop="dateCreated datePublished" datetime="2019-01-29T22:13:36+08:00">2019-01-29</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/SVN/" itemprop="url" rel="index">
+                    <span itemprop="name">SVN</span>
+                  </a>
+                </span>
+            </span>
+
+          
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="fa fa-comment-o"></i>
+      </span>
+      <span class="post-meta-item-text">Disqus: </span>
+    
+    <a title="disqus" href="/2019/01/29/ways-to-avoid-svn-conflict/#disqus_thread" itemprop="discussionUrl">
+      <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2019/01/29/ways-to-avoid-svn-conflict/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  <br>
+  <span class="post-meta-item" title="Symbols count in article">
+    <span class="post-meta-item-icon">
+      <i class="fa fa-file-word-o"></i>
+    </span>
+      <span class="post-meta-item-text">Symbols count in article: </span>
+    <span>973</span>
+  </span>
+  <span class="post-meta-item" title="Reading time">
+    <span class="post-meta-item-icon">
+      <i class="fa fa-clock-o"></i>
+    </span>
+      <span class="post-meta-item-text">Reading time &asymp;</span>
+    <span>3 mins.</span>
+  </span>
+
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>svn 给笔者的一大印象就是非常容易产生冲突，特别是项目加入新人后，由于初期没有强硬地制定规范，导致后期合并代码时灾难连天。决定在此分享这些“亡羊补牢”的规则，也算是避免 svn 产生合并冲突的一点经验。</p>
+<a id="more"></a>
+<h2 id="一个简单的分支管理策略"><a href="#一个简单的分支管理策略" class="headerlink" title="一个简单的分支管理策略"></a>一个简单的分支管理策略</h2><p>正式分享 tips 前，先交代一下目前在用的 svn 管理策略，因为本文避免合并冲突的一些要点就是建立在此策略之上的。</p>
+<p>类似于 git 的轻度规则，主要分为 dev、master、release 三种分支。</p>
+<p>以 master 为核心，保存完整代码。release 则允许剔除未编译前端 js、测试用例、项目文档等运行环境不需要的文件，减轻发布体积。功能开发在各 dev 进行。因此 master 和 release 只需要处理代码合并。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">发布分支        主干       开发分支</span><br><span class="line"></span><br><span class="line">release1 &lt;-            &lt;- dev</span><br><span class="line">release2 &lt;-   master   &lt;- feature</span><br><span class="line">...      &lt;-            &lt;- ...</span><br></pre></td></tr></table></figure>
+
+<h2 id="如何避免冲突"><a href="#如何避免冲突" class="headerlink" title="如何避免冲突"></a>如何避免冲突</h2><h3 id="1-编辑器装好-svn-相关插件。"><a href="#1-编辑器装好-svn-相关插件。" class="headerlink" title="1. 编辑器装好 svn 相关插件。"></a>1. 编辑器装好 svn 相关插件。</h3><p>不同于“装机必备”的 git ，很多编辑器没有自带 svn 的管理插件，需要用户自己安装。</p>
+<p>尤其重要的功能是可以实时对比 diff，本地和远程仓库的差异一览无遗，不要再疑惑为什么本地顺畅线上崩盘了。</p>
+<p>windows 开发环境可能需要配置 svn 环境变量，但不要偷懒，这点工作一劳永逸。</p>
+<h3 id="2-细化提交。"><a href="#2-细化提交。" class="headerlink" title="2. 细化提交。"></a>2. 细化提交。</h3><p>当合并时，假如发现同一个提交下存在还未达到上线状态的变更，这种情况如果忽略合并某些代码，会导致该开发分支和 master 分支不再一致，为后继的开发者挖坑。</p>
+<h3 id="3-开发分支也要规范-commit-log。"><a href="#3-开发分支也要规范-commit-log。" class="headerlink" title="3. 开发分支也要规范 commit log。"></a>3. 开发分支也要规范 commit log。</h3><p>尽管开发分支可能在功能完成后就被删除，依然要有意识地为各个 commit 打上前缀、标签。</p>
+<p>假设某开发分支是多人协作，若 commit log 有合适的标签，可以增加合并时的检索效率，避免遗漏部分久远的提交。当然，除非业务关联性较大，放在一个分支方便做同时修改，最好还是分模块、分特性单独建开发分支。</p>
+<h3 id="4-所有的合并操作，采取针对版本号的更改。"><a href="#4-所有的合并操作，采取针对版本号的更改。" class="headerlink" title="4. 所有的合并操作，采取针对版本号的更改。"></a>4. 所有的合并操作，采取针对版本号的更改。</h3><p>其实主要面向需要长期维护的开发分支，直接合并目录树会携带大量不稳定变更。</p>
+<h3 id="5-对完整的分支执行合并。"><a href="#5-对完整的分支执行合并。" class="headerlink" title="5. 对完整的分支执行合并。"></a>5. 对完整的分支执行合并。</h3><p>对整个分支目录执行合并，而不是对单个文件、单个子目录做合并，否则结合第 2 点，这极容易埋下隐患。</p>
+<h3 id="6-牢记发布分支-release-是-master-的快照。"><a href="#6-牢记发布分支-release-是-master-的快照。" class="headerlink" title="6. 牢记发布分支 release 是 master 的快照。"></a>6. 牢记发布分支 release 是 master 的快照。</h3><p>禁止跨过 master 在 release 直接提交代码。更危险的是在 release 提交的代码和 master 不一致，好在上次遇到这么做的被我及时制止了。XD</p>
+<p>进一步要求，不要在 master 直接提交解决冲突以外的代码。</p>
+<h3 id="7-定期把-master-的所有更改合并回开发分支。"><a href="#7-定期把-master-的所有更改合并回开发分支。" class="headerlink" title="7. 定期把 master 的所有更改合并回开发分支。"></a>7. 定期把 master 的所有更改合并回开发分支。</h3><p>尤其是涉及工具类、公共模块的更改。当开发分支维护不下去时，以 master 为基准重建开发分支。</p>
+<h3 id="8-遇到-GUI-解决不了的冲突，命令行参数了解一下。"><a href="#8-遇到-GUI-解决不了的冲突，命令行参数了解一下。" class="headerlink" title="8. 遇到 GUI 解决不了的冲突，命令行参数了解一下。"></a>8. 遇到 GUI 解决不了的冲突，命令行参数了解一下。</h3><p>大杀器，说多了都是泪……</p>
+<h2 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h2><p>以上内容是笔者几乎照搬着对 git 的理解来总结的，可能并不成熟。不过经过了一年的实践，这些“规范”操作的确达到了避免冲突的目的，且远没有复杂过 git rebase 工具流。</p>
+<p>制定规范是一回事，更应该要求团队成员继续加深对版本管理库的理解，思考分支合并存在的意义，养成更好的提交习惯。</p>
+
+    </div>
+
+    
+    
+    
+        
+
+<div>
+<ul class="post-copyright">
+  <li class="post-copyright-author">
+    <strong>Post author:  </strong>Claude Ray
+  </li>
+  <li class="post-copyright-link">
+    <strong>Post link: </strong>
+    <a href="http://claude-ray.com/2019/01/29/ways-to-avoid-svn-conflict/" title="如何避免svn合并冲突">http://claude-ray.com/2019/01/29/ways-to-avoid-svn-conflict/</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>Copyright Notice:  </strong>All articles in this blog are licensed under <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" rel="noopener" target="_blank"><i class="fa fa-fw fa-creative-commons"></i>BY-NC-SA</a> unless stating additionally.
+  </li>
+</ul>
+</div>
+
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/SVN/" rel="tag"># SVN</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2019/01/24/nginx-proxypass-args/" rel="prev" title="Nginx改写$args未生效踩坑">
+      <i class="fa fa-chevron-left"></i> Nginx改写$args未生效踩坑
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2019/02/21/bindip-debian-hostname/" rel="next" title="当 bind_ip:127.0.0.1 遇上 Debian 的默认 host">
+      当 bind_ip:127.0.0.1 遇上 Debian 的默认 host <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+  </div>
+
+
+          </div>
+          
+    
+  <div class="comments">
+    <div id="disqus_thread">
+      <noscript>Please enable JavaScript to view the comments powered by Disqus.</noscript>
+    </div>
+  </div>
+  
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let activeClass = CONFIG.comments.activeClass;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#一个简单的分支管理策略"><span class="nav-number">1.</span> <span class="nav-text">一个简单的分支管理策略</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#如何避免冲突"><span class="nav-number">2.</span> <span class="nav-text">如何避免冲突</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-编辑器装好-svn-相关插件。"><span class="nav-number">2.1.</span> <span class="nav-text">1. 编辑器装好 svn 相关插件。</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-细化提交。"><span class="nav-number">2.2.</span> <span class="nav-text">2. 细化提交。</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-开发分支也要规范-commit-log。"><span class="nav-number">2.3.</span> <span class="nav-text">3. 开发分支也要规范 commit log。</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-所有的合并操作，采取针对版本号的更改。"><span class="nav-number">2.4.</span> <span class="nav-text">4. 所有的合并操作，采取针对版本号的更改。</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#5-对完整的分支执行合并。"><span class="nav-number">2.5.</span> <span class="nav-text">5. 对完整的分支执行合并。</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#6-牢记发布分支-release-是-master-的快照。"><span class="nav-number">2.6.</span> <span class="nav-text">6. 牢记发布分支 release 是 master 的快照。</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#7-定期把-master-的所有更改合并回开发分支。"><span class="nav-number">2.7.</span> <span class="nav-text">7. 定期把 master 的所有更改合并回开发分支。</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#8-遇到-GUI-解决不了的冲突，命令行参数了解一下。"><span class="nav-number">2.8.</span> <span class="nav-text">8. 遇到 GUI 解决不了的冲突，命令行参数了解一下。</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#小结"><span class="nav-number">3.</span> <span class="nav-text">小结</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Claude Ray"
+      src="/images/avatar.jpg">
+  <p class="site-author-name" itemprop="name">Claude Ray</p>
+  <div class="site-description" itemprop="description">Now or Never</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">54</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">13</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">63</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/Claude-Ray" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;Claude-Ray" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://twitter.com/Claude__Ray" title="Twitter → https:&#x2F;&#x2F;twitter.com&#x2F;Claude__Ray" rel="noopener" target="_blank"><i class="fa fa-fw fa-twitter"></i>Twitter</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://steamcommunity.com/profiles/76561198202113170" title="Steam → https:&#x2F;&#x2F;steamcommunity.com&#x2F;profiles&#x2F;76561198202113170" rel="noopener" target="_blank"><i class="fa fa-fw fa-steam"></i>Steam</a>
+      </span>
+  </div>
+
+
+  <div class="links-of-blogroll motion-element">
+    <div class="links-of-blogroll-title">
+      <i class="fa fa-fw fa-link"></i>
+      Links
+    </div>
+    <ul class="links-of-blogroll-list">
+        <li class="links-of-blogroll-item">
+          <a href="https://github.com/nebulae-pan" title="https:&#x2F;&#x2F;github.com&#x2F;nebulae-pan" rel="noopener" target="_blank">Nebulae Pan</a>
+        </li>
+    </ul>
+  </div>
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+<div class="copyright">
+  
+  &copy; 2017 – 
+  <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-bolt"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Claude Ray</span>
+</div><div class="copyright">
+
+  <span class="post-meta-divider">|</span>
+  <span class="post-meta-item-icon">
+    <i class="fa fa-area-chart"></i>
+  </span>
+  <span class="post-meta-item-text">Symbols count total: </span>
+  <span title="Symbols count total">63.2k</span>
+
+</div>
+
+<div>
+  Welcome To My <a href="https://github.com/Claude-Ray/claude-ray.github.io" target="_blank" rel="noopener">Homepage</a>. Happy hacking!
+</div>
+
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+  <script>
+    (function(){
+      var bp = document.createElement('script');
+      var curProtocol = window.location.protocol.split(':')[0];
+      bp.src = (curProtocol === 'https') ? 'https://zz.bdstatic.com/linksubmit/push.js' : 'http://push.zhanzhang.baidu.com/push.js';
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(bp, s);
+    })();
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script>
+  function loadCount() {
+    var d = document, s = d.createElement('script');
+    s.src = 'https://claude-ray.disqus.com/count.js';
+    s.id = 'dsq-count-scr';
+    (d.head || d.body).appendChild(s);
+  }
+  // defer loading until the whole page loading is completed
+  window.addEventListener('load', loadCount, false);
+</script>
+<script>
+  var disqus_config = function() {
+    this.page.url = "http://claude-ray.com/2019/01/29/ways-to-avoid-svn-conflict/";
+    this.page.identifier = "2019/01/29/ways-to-avoid-svn-conflict/";
+    this.page.title = "如何避免svn合并冲突";
+    };
+  NexT.utils.loadComments(document.querySelector('#disqus_thread'), () => {
+    if (window.DISQUS) {
+      DISQUS.reset({
+        reload: true,
+        config: disqus_config
+      });
+    } else {
+      var d = document, s = d.createElement('script');
+      s.src = 'https://claude-ray.disqus.com/embed.js';
+      s.setAttribute('data-timestamp', '' + +new Date());
+      (d.head || d.body).appendChild(s);
+    }
+  });
+</script>
+
+</body>
+</html>
